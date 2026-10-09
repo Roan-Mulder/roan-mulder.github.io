@@ -240,7 +240,7 @@ p { margin: 0 0 1rem; }
 
   .hero { padding-top: 3rem; }
   .hero-inner, .about-grid, .summary, .row { grid-template-columns: 1fr; gap: 2rem; }
-  .hero-inner .media--portrait, .about-grid .media--portrait { max-width: 18rem; }
+  .hero-inner .media--portrait, .about-grid .media--portrait, .hero-inner .media--square { max-width: 18rem; }
   .row--flip .row-media { order: 0; }
   .cv-block { grid-template-columns: 1fr; gap: .5rem; }
   .section { padding: 3.5rem var(--pad); }
