@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Platformer Level Design Toolkit | Roan Mulder</title>
+  <meta name="description" content="A modular Unreal Engine 5 toolkit based on the secret levels of Super Mario Sunshine, by Roan Mulder.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%A9%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="site-header">
+  <a class="logo" href="index.html" aria-label="Roan Mulder, Level Designer, home">
+    Roan Mulder<span class="logo-role"> - Level Designer</span>
+  </a>
+  <button class="nav-toggle" aria-controls="site-nav" aria-expanded="false">Menu</button>
+  <nav class="site-nav" id="site-nav" aria-label="Main">
+    <ul class="nav-list">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="cv.html">CV</a></li>
+        <li><a href="about.html">About Me</a></li>
+        <li><a href="projects.html" aria-current="page">Projects</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="https://www.linkedin.com/in/roanmulder/" aria-label="LinkedIn (opens in a new tab)" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9.75h4V21H3V9.75zm6.5 0h3.83v1.54h.06c.53-1 1.84-2.07 3.78-2.07 4.04 0 4.78 2.66 4.78 6.12V21h-4v-4.72c0-1.13-.02-2.58-1.57-2.58-1.57 0-1.81 1.23-1.81 2.5V21h-4V9.75z"/></svg></a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="content">
+  <div class="band-pine">
+    <h1 class="project-title">Platformer Level Design Toolkit (2025-2026)</h1>
+    <p class="project-role">Level Designer, solo project</p>
+
+    <section class="section" aria-labelledby="summary-title" style="padding-top:2.5rem">
+      <div class="section-inner summary">
+        <div>
+          <div class="media media--cover"><div class="ph">Cover image: mario-cover.jpg</div><img src="images/mario-cover.jpg" alt="The toolkit demo level in Unreal Engine 5" onerror="this.remove()"></div>
+        </div>
+        <div>
+          <h2 id="summary-title">Summary</h2>
+          <p>A modular toolkit for Unreal Engine 5 that rebuilds the obstacles of Super Mario Sunshine's secret levels (the ones without FLUDD) as Actor Components and Blueprints you can drop into your own level. It comes with a 26-page How-To document and a demo level that shows every element in use.</p>
+
+          <h2>Project information</h2>
+          <dl class="facts">
+            <dt>Role</dt><dd>Level Designer</dd>
+            <dt>Project type</dt><dd>Solo student project</dd>
+            <dt>Team size</dt><dd>1</dd>
+            <dt>Genre</dt><dd>3D platformer toolkit</dd>
+            <dt>Platform</dt><dd>PC</dd>
+            <dt>Duration</dt><dd>[number] weeks</dd>
+            <dt>Engine</dt><dd>Unreal Engine 5.6</dd>
+          </dl>
+
+          <h2>Responsibility highlights</h2>
+          <ul>
+            <li>Broke the secret levels down into reusable parts and ranked them from must have to won't have.</li>
+            <li>Widened the scope after feedback by studying A Hat in Time, Penny's Big Breakaway and Super Mario 64.</li>
+            <li>Built eight toolkit elements in Blueprints, from simple movement to a spline-driven platform and a void actor.</li>
+            <li>Playtested the demo level with my lecturer and changed it in two rounds.</li>
+            <li>Wrote a 26-page How-To with a complete level setup guide.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:1rem" aria-labelledby="video-title">
+      <div class="section-inner">
+        <h2 id="video-title" style="text-align:center;font-size:1.8rem;margin-bottom:1.5rem">Gameplay</h2>
+        <div class="video"><iframe src="https://www.youtube.com/embed/2UT7SS-zG0E" title="Gameplay video of the toolkit demo level" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+        <p class="caption">This recording is from before the color pass. The changes I made after playtesting are described below.</p>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:1rem">
+      <div class="section-inner">
+
+        <div class="story">
+          <h2>The goal</h2>
+          <p>The secret levels in Super Mario Sunshine are built from a small set of obstacles that keep coming back. I wanted to break them down into reusable parts and turn them into a toolkit that anyone can use to build their own platforming levels.</p>
+          <p>The toolkit is made for three groups:</p>
+          <ul>
+            <li>Beginners in Unreal Engine 5 who want to try level design without a lot of Blueprint work.</li>
+            <li>Fans of 3D platformers like Super Mario Sunshine or A Hat in Time who want to recreate those levels.</li>
+            <li>Advanced Unreal Engine 5 users who want to expand an existing platformer toolkit.</li>
+          </ul>
+        </div>
+
+        <div class="story">
+          <h2>How I designed it</h2>
+          <p>My first proposal was a Banjo-Kazooie character controller. I changed the concept in week 2 and took the Mario Sunshine proposal through three drafts and a round of feedback.</p>
+          <p>I sorted the obstacles I found into must have, should have, could have and won't have, so the scope stayed realistic. After feedback that the proposal was too simple, I looked at other games for more behaviors, including balloons, button sequences and trampolines from A Hat in Time, a shockwave hazard from Penny's Big Breakaway and the switch block from Super Mario 64.</p>
+          <p>Before building each element, I painted over reference screenshots to show the movement direction, rotation axes and states of the behavior.</p>
+          <figure class="figure">
+            <div class="media media--auto media--contain"><div class="ph">Image: mario-paintovers.png</div><img src="images/mario-paintovers.png" alt="Paint-overs of five toolkit behaviors: simple movement, simple rotation, disappearing platform, bouncing platform and spline moving platform" onerror="this.remove()"></div>
+            <figcaption>Paint-overs of the five main behaviors, drawn over reference footage.</figcaption>
+          </figure>
+          <figure class="figure">
+            <div class="media media--auto media--contain"><div class="ph">Image: mario-breakdown.png</div><img src="images/mario-breakdown.png" alt="Breakdown of the secret levels into reusable parts, with a must have, should have, could have and won't have ranking" onerror="this.remove()"></div>
+            <figcaption>The secret levels broken into reusable parts, and the ranking I used to pick what to build.</figcaption>
+          </figure>
+        </div>
+
+        <div class="story">
+          <h2>What is in the toolkit</h2>
+          <ul>
+            <li>Simple Movement</li>
+            <li>Simple Rotation</li>
+            <li>Disappearing Platform</li>
+            <li>Bouncing Platform</li>
+            <li>Spline Moving Platform</li>
+            <li>Platforming Void Actor</li>
+            <li>End Collectable</li>
+            <li>Regular Collectable</li>
+          </ul>
+          <p>The How-To document has a chapter for each element, a complete level setup guide, a section on adding new content to the toolkit, and a troubleshooting section.</p>
+          <figure class="figure">
+            <div class="media media--auto media--contain"><div class="ph">Image: mario-howto.png</div><img src="images/mario-howto.png" alt="Table of contents and pages of the How-To document" onerror="this.remove()"></div>
+            <figcaption>The How-To document: table of contents and setup pages.</figcaption>
+          </figure>
+        </div>
+
+        <div class="story">
+          <h2>Playtesting and iteration</h2>
+          <p>My lecturer played the demo level and gave feedback on several things. I made two rounds of changes.</p>
+          <div class="iter-grid">
+            <div class="iter">
+              <h3>Before the playtest</h3>
+              <div class="media media--auto media--contain"><div class="ph">Image: mario-iteration-0.png</div><img src="images/mario-iteration-0.png" alt="Demo level layout before the playtest, in side view and top view" onerror="this.remove()"></div>
+            </div>
+            <div class="iter">
+              <h3>Round 1: making the demo a showcase</h3>
+              <div class="media media--auto media--contain"><div class="ph">Image: mario-iteration-1.png</div><img src="images/mario-iteration-1.png" alt="Demo level layout after round 1, with collectables, explanation text and an extra resting spot" onerror="this.remove()"></div>
+              <p>The resting points had no information, so I added short text explaining what the next section teaches. I also added collectables as red coins that unlock the end collectable, and an extra resting spot, which meant moving sections 4 and 5 further right.</p>
+            </div>
+            <div class="iter">
+              <h3>Round 2: clearer to read, kinder to play</h3>
+              <div class="media media--auto media--contain"><div class="ph">Image: mario-iteration-2.png</div><img src="images/mario-iteration-2.png" alt="Demo level layout after round 2, with colored materials and floors under the hardest sections" onerror="this.remove()"></div>
+              <p>The all-white blocks made it hard to judge space, so I made six simple color materials and kept the resting points white to mark them as safe. I made a cube with a different color on each side, so you can see which way a platform is rotating. Sections 3, 4 and 5 were too punishing, so I added floors under the hardest parts, because the level is a showcase and should not punish the player.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="story">
+          <h2>What I would do differently</h2>
+          <!-- EDIT: replace this with one or two honest lessons, in your own words -->
+          <p>[Write one or two lessons here, for example about scope, testing with more than one person, or how you wrote the documentation.]</p>
+        </div>
+
+        <h2 style="font-size:1.8rem;margin:2.5rem 0 1rem">Screenshots</h2>
+        <div class="gallery">
+          <div class="media media--cover"><div class="ph">Screenshot: mario-shot-1.jpg</div><img src="images/mario-shot-1.jpg" alt="Screenshot of the demo level" onerror="this.remove()"></div>
+          <div class="media media--cover"><div class="ph">Screenshot: mario-shot-2.jpg</div><img src="images/mario-shot-2.jpg" alt="Screenshot of the demo level" onerror="this.remove()"></div>
+          <div class="media media--cover"><div class="ph">Screenshot: mario-shot-3.jpg</div><img src="images/mario-shot-3.jpg" alt="Screenshot of the demo level" onerror="this.remove()"></div>
+        </div>
+        <p class="section-more"><a class="btn" href="projects.html">Back to projects</a></p>
+      </div>
+    </section>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-follow">Follow</div>
+    <ul class="footer-links">
+      <li><a href="https://www.linkedin.com/in/roanmulder/" target="_blank" rel="noopener">LinkedIn</a></li>
+      <li><a href="https://roanthegamer.itch.io" target="_blank" rel="noopener">itch.io</a></li>
+      <li><a href="mailto:your.email@example.com">Email</a></li>
+    </ul>
+  </div>
+</footer>
+<script src="js/main.js"></script>
+</body>
+</html>
