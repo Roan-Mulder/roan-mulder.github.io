@@ -11,11 +11,26 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <style>
-    /* Project previews: one per row; on wide desktops the same card is scaled down so two fit side by side */
+    /* Project previews: one per row. On wide desktops the pair spreads across the window,
+       and each card is the same layout scaled to fill half of it (sizes below are in em, so they all scale together). */
     .card-grid.preview-grid { grid-template-columns: auto !important; }
     @media (min-width: 1280px) {
-      .card-grid.preview-grid { grid-template-columns: repeat(2, auto) !important; }
-      .preview-grid > .card { width: 916px; zoom: .6114; }
+      .card-grid.preview-grid {
+        grid-template-columns: repeat(2, auto) !important; gap: 36px;
+        width: calc(100vw - 70px); margin-left: calc(50% - 50vw + 35px);
+      }
+      .preview-grid > .card {
+        font-size: calc((100vw - 106px) / 114.5); width: 57.25em;
+        padding: 1.2em 1.4em 1.6em; border-radius: 1.4em; gap: 1.5em 2.5em !important;
+      }
+      .preview-grid h3 { font-size: 1.05em; margin: .381em 0 .762em !important; }
+      .preview-grid .role { font-size: .92em; margin: -.4348em 0 1.3043em !important; }
+      .preview-grid .media { width: 18em !important; border-radius: .9em; }
+      .preview-grid .ph { font-size: .9em; }
+      .preview-grid .card > div:last-child { flex-basis: 17em !important; }
+      .preview-grid ul { font-size: .9em; margin: 0 0 1.6667em; padding-left: 1.2222em; }
+      .preview-grid li { margin-bottom: .3333em; }
+      .preview-grid .btn { font-size: .95em; padding: .8947em 2.1053em; min-width: 8.9474em; }
     }
   </style>
 </head>
