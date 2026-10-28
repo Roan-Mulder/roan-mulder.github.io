@@ -123,7 +123,8 @@
     .drawer-group { font-size: .82rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: #3b5a4a; margin: 0 0 .7rem; }
     .drawer-desc { margin: 0; }
     .drawer-media { grid-area: media; position: relative; aspect-ratio: 16 / 9; border-radius: .8rem; overflow: hidden; background: #d3dadd; }
-    .drawer-video { display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .2s; }
+    /* The box takes the video's own shape once it loads (see the script), so nothing is cropped */
+    .drawer-video { display: block; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .2s; }
     .drawer-media.is-ready .drawer-video { opacity: 1; cursor: zoom-in; }
     .drawer-media.is-ready .drawer-video[controls] { cursor: auto; }
     .drawer-ph { position: absolute; inset: 0; display: none; place-content: center; gap: .3rem; padding: 1rem; text-align: center; color: #26313a; }
@@ -835,6 +836,7 @@
       drawer.querySelector('.drawer-desc').textContent = el.text;
       placeholder.querySelector('.drawer-ph-name').textContent = el.name;
       media.classList.remove('is-ready', 'is-missing');
+      media.style.aspectRatio = '';               // back to 16:9 until the new video says its shape
       enlarge.disabled = true;
       video.pause();
       video.preload = 'none';
@@ -848,6 +850,9 @@
       video.load();
       if (!reduce.matches) { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
     }
+    video.addEventListener('loadedmetadata', function () {
+      if (video.videoWidth && video.videoHeight) media.style.aspectRatio = video.videoWidth + ' / ' + video.videoHeight;
+    });
     video.addEventListener('loadeddata', function () { media.classList.add('is-ready'); enlarge.disabled = !lightbox.showModal; });
     video.addEventListener('error', function () {
       if (!video.getAttribute('src')) return;
