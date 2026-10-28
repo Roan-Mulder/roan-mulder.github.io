@@ -30,8 +30,16 @@
     .role-box :focus-visible { outline-color: var(--ink); }
 
     /* ---------- Overview buttons (stick to the top while scrolling) ---------- */
-    .overview { position: sticky; top: 0; z-index: 15; background: rgba(15, 36, 26, .96); border-bottom: 1px solid rgba(111, 146, 121, .35); padding: .75rem var(--pad); }
-    .overview ol { list-style: none; margin: 0 auto; padding: 0; max-width: var(--max); display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; }
+    /* The nav itself is invisible and lets clicks through; only the pill around the buttons shows */
+    .overview { position: sticky; top: calc(var(--site-header-height, 0px) + 8px); z-index: 15; display: flex; justify-content: center; pointer-events: none; }
+    .overview ol {
+      list-style: none; margin: 0; padding: 7px; width: max-content; max-width: calc(100% - 32px);
+      display: flex; flex-wrap: wrap; justify-content: center; gap: .4rem; pointer-events: auto;
+      background: var(--deep); border: 1px solid var(--edge); border-radius: 999px; box-shadow: 0 .4rem 1.2rem rgba(0, 0, 0, .25);
+    }
+    .overview ol.is-wrapped { border-radius: 16px; }   /* two rows on a phone */
+    /* Jumping to a part keeps its heading clear of the site header and the pill */
+    html { scroll-padding-top: calc(var(--site-header-height, 0px) + 8px + var(--overview-height, 52px) + 16px); }
     .overview a {
       display: inline-block; text-decoration: none; font-size: .92rem;
       padding: .5rem 1.1rem; border: 2px solid var(--edge); border-radius: 999px; color: var(--cream);
@@ -41,7 +49,7 @@
     .overview a[aria-current="true"] { background: var(--cream); color: var(--ink); border-color: var(--cream); }
 
     /* ---------- Parts and steps ---------- */
-    .part { padding: 4rem 0 1rem; scroll-margin-top: 4.5rem; }
+    .part { padding: 4rem 0 1rem; }
     .part + .part { border-top: 1px solid rgba(111, 146, 121, .35); }
     .part-label { display: block; font-family: var(--font-body); font-size: .85rem; letter-spacing: .08em; text-transform: uppercase; color: var(--sage); margin-bottom: .4rem; }
     .part > h2 { font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 500; margin-bottom: 1.5rem; }
@@ -107,7 +115,7 @@
 
     /* Drawer: slides open with grid-template-rows (0fr to 1fr) */
     .drawer {
-      display: grid; grid-template-rows: 0fr; visibility: hidden; margin: 0 1rem; scroll-margin: 5.5rem 0 1rem;
+      display: grid; grid-template-rows: 0fr; visibility: hidden; margin: 0 1rem; scroll-margin: 0 0 1rem;
       transition: grid-template-rows .33s cubic-bezier(.2, .7, .2, 1), visibility 0s linear .33s;
     }
     .drawer.is-open { grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows .33s cubic-bezier(.2, .7, .2, 1), visibility 0s; }
@@ -231,11 +239,8 @@
       .p2-intro, .weave { grid-template-columns: 1fr; gap: 1.5rem; }
       .weave--flip > .weave-media { order: 0; }
       .part { padding-top: 3rem; }
-      .overview { padding: .6rem var(--pad); }
-      .overview ol { flex-wrap: nowrap; justify-content: flex-start; gap: .4rem; overflow-x: auto; }
-      .overview li { flex: 0 0 auto; }
-      .overview a { padding: .4rem .75rem; font-size: .8rem; white-space: nowrap; }
-      .part { scroll-margin-top: 4rem; }
+      .overview ol { padding: 6px; gap: .3rem; }
+      .overview a { padding: .4rem .55rem; font-size: .8rem; }   /* smaller padding first; wraps only if it still does not fit */
     }
 
     /* ==========================================================
@@ -307,7 +312,7 @@
     .theme-void main :focus-visible { outline-color: var(--panel-text); }
 
     /* Overview buttons on a light bar */
-    .theme-void .overview { background: var(--panel); border-bottom: 1px solid rgba(18, 40, 29, .12); box-shadow: 0 .3rem 1rem rgba(38, 72, 102, .12); }
+    .theme-void .overview ol { background: #fff; border: 1px solid #a9bfd0; box-shadow: 0 .4rem 1.2rem rgba(20, 35, 47, .18); }
     .theme-void .overview a { color: var(--panel-text); border-color: var(--panel-line); }
     .theme-void .overview a:hover { border-color: var(--panel-text); }
     .theme-void .overview a[aria-current="true"] { background: var(--moss); color: var(--cream); border-color: var(--moss); }
@@ -350,7 +355,6 @@
     .theme-void main .btn { color: var(--btn-ink); background: #fff; border: 2px solid var(--btn-blue-deep); }
     .theme-void main .btn:hover { background: var(--btn-blue-tint); border-color: var(--btn-ink); }
 
-    .theme-void .overview { border-bottom-color: rgba(20, 35, 47, .14); box-shadow: 0 .3rem 1rem rgba(38, 72, 102, .12); }
     .theme-void .overview a { color: var(--btn-ink); background: #fff; border: 2px solid var(--btn-blue-deep); }
     .theme-void .overview a:hover { background: var(--btn-blue-tint); border-color: var(--btn-ink); }
     .theme-void .overview a[aria-current="true"] { color: var(--btn-ink); background: var(--btn-blue); border-color: var(--btn-blue-deep); box-shadow: inset 0 0 0 1px var(--btn-blue-deep); font-weight: 600; }
@@ -786,6 +790,15 @@
     var links = Array.prototype.slice.call(document.querySelectorAll('.overview a'));
     var parts = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
     var bar = document.querySelector('.overview');
+    var pill = bar.querySelector('ol');
+    function measure() {
+      document.documentElement.style.setProperty('--overview-height', pill.offsetHeight + 'px');
+      var items = pill.children;
+      pill.classList.toggle('is-wrapped', items[items.length - 1].offsetTop > items[0].offsetTop + 2);
+    }
+    measure();
+    window.addEventListener('resize', measure);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
     var ticking = false;
 
     function update() {
