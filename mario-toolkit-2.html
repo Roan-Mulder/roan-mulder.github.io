@@ -123,7 +123,8 @@
     .drawer-group { font-size: .82rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: #3b5a4a; margin: 0 0 .7rem; }
     .drawer-desc { margin: 0; }
     .drawer-media { grid-area: media; position: relative; aspect-ratio: 16 / 9; border-radius: .8rem; overflow: hidden; background: #d3dadd; }
-    .drawer-video { display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .2s; }
+    /* The box takes the video's own shape once it loads (see the script), so nothing is cropped */
+    .drawer-video { display: block; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .2s; }
     .drawer-media.is-ready .drawer-video { opacity: 1; cursor: zoom-in; }
     .drawer-media.is-ready .drawer-video[controls] { cursor: auto; }
     .drawer-ph { position: absolute; inset: 0; display: none; place-content: center; gap: .3rem; padding: 1rem; text-align: center; color: #26313a; }
@@ -692,11 +693,12 @@
      THE EIGHT ELEMENTS: edit this list to change the buttons and the drawer.
      group: "core" (Core Behaviors) or "logic" (Level Logic Actors).
      file:  the museum video inside MEDIA_FOLDER. The poster image has the same name, ending in .jpg.
+     mobileFile (optional): a smaller copy of the same video, used on phones (640px wide and narrower).
      If you change a name or description, also update the no-JavaScript lists in Part 1.
      ========================================================== */
   var MEDIA_FOLDER = 'images/museum/';
   var ELEMENTS = [
-    { group: 'core',  name: 'Simple movement',        text: 'Moves a platform back and forth along an axis.', file: 'museum-simple-movement.mp4' },
+    { group: 'core',  name: 'Simple movement',        text: 'Moves a platform back and forth along an axis.', file: 'museum-simple-movement.mp4', mobileFile: 'museum-simple-movement-mobile.mp4' },
     { group: 'core',  name: 'Simple rotation',        text: 'Spins a platform around any axis.', file: 'museum-simple-rotation.mp4' },
     { group: 'core',  name: 'Disappearing platform',  text: 'Vanishes and returns, on a timer or when stepped on, including alternating patterns.', file: 'museum-disappearing-platform.mp4' },
     { group: 'core',  name: 'Bouncing platform',      text: 'A trampoline bounce, or a balloon that launches the player in an arc.', file: 'museum-bouncing-platform.mp4' },
@@ -730,6 +732,7 @@
     var current = -1;                 // index of the element in the drawer
     var pending = null;               // latest click made during an animation
     var timer = null;
+    var triedFull = true;             // false while a phone is trying the smaller mobile copy
 
     function onChange(mq, fn) { if (mq.addEventListener) mq.addEventListener('change', fn); else mq.addListener(fn); }
     function make(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
@@ -835,11 +838,13 @@
       drawer.querySelector('.drawer-desc').textContent = el.text;
       placeholder.querySelector('.drawer-ph-name').textContent = el.name;
       media.classList.remove('is-ready', 'is-missing');
+      media.style.aspectRatio = '';               // back to 16:9 until the new video says its shape
       enlarge.disabled = true;
       video.pause();
       video.preload = 'none';
       video.poster = MEDIA_FOLDER + el.file.replace(/\.mp4$/i, '.jpg');
-      video.src = MEDIA_FOLDER + el.file;
+      triedFull = !(phone.matches && el.mobileFile);
+      video.src = MEDIA_FOLDER + (triedFull ? el.file : el.mobileFile);
     }
     function startVideo() {
       video.controls = reduce.matches;             // reduced motion: poster and native controls, no autoplay
@@ -848,9 +853,18 @@
       video.load();
       if (!reduce.matches) { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
     }
+    video.addEventListener('loadedmetadata', function () {
+      if (video.videoWidth && video.videoHeight) media.style.aspectRatio = video.videoWidth + ' / ' + video.videoHeight;
+    });
     video.addEventListener('loadeddata', function () { media.classList.add('is-ready'); enlarge.disabled = !lightbox.showModal; });
     video.addEventListener('error', function () {
       if (!video.getAttribute('src')) return;
+      if (!triedFull) {                            // the mobile copy failed: try the full video before giving up
+        triedFull = true;
+        video.src = MEDIA_FOLDER + ELEMENTS[current].file;
+        startVideo();
+        return;
+      }
       media.classList.add('is-missing');          // missing or broken file: show the grey placeholder
       enlarge.disabled = true;
     });
