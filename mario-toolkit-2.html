@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Void-Based Platformer Level Design Toolkit (draft) | Roan Mulder</title>
+  <meta name="description" content="How Roan Mulder designed and built a beginner-friendly Unreal Engine 5 toolkit for Mario Sunshine-style void levels.">
+  <!-- Draft page: kept out of search results until it replaces mario-toolkit.html. Remove this line when it goes live. -->
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%A9%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ---------- Intro: title, hook, showcase and role box ---------- */
+    .p2-hook { text-align: center; font-size: clamp(1.1rem, 2vw, 1.35rem); max-width: 44rem; margin: 1rem auto 0; padding: 0 var(--pad); }
+    .intro { padding-top: 0; padding-bottom: 3rem; }
+    .intro .p2-intro { margin-top: 2.5rem; }
+    .p2-intro { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2.5rem; align-items: start; }
+
+    /* Role box: cream card so it stands apart from the dark page */
+    .role-box { background: var(--cream); color: var(--ink); border-radius: 1.2rem; padding: 1.6rem 1.8rem; border-left: .6rem solid var(--gold); }
+    .role-box h2 { font-family: var(--font-head); font-weight: 600; font-size: 1.3rem; margin: 0 0 1rem; }
+    .role-box .facts { margin-bottom: 1.2rem; }
+    .role-box h3 { font-family: var(--font-body); font-weight: 600; font-size: 1rem; margin: 0 0 .4rem; }
+    .role-box ul { margin: 0; padding-left: 1.2rem; font-size: .95rem; }
+    .role-box li { margin-bottom: .45rem; }
+    .role-box :focus-visible { outline-color: var(--ink); }
+
+    /* ---------- Overview buttons (stick to the top while scrolling) ---------- */
+    .overview { position: sticky; top: 0; z-index: 15; background: rgba(15, 36, 26, .96); border-bottom: 1px solid rgba(111, 146, 121, .35); padding: .75rem var(--pad); }
+    .overview ol { list-style: none; margin: 0 auto; padding: 0; max-width: var(--max); display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; }
+    .overview a {
+      display: inline-block; text-decoration: none; font-size: .92rem;
+      padding: .5rem 1.1rem; border: 2px solid var(--edge); border-radius: 999px; color: var(--cream);
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .overview a:hover { border-color: var(--cream); }
+    .overview a[aria-current="true"] { background: var(--cream); color: var(--ink); border-color: var(--cream); }
+
+    /* ---------- Parts and steps ---------- */
+    .part { padding: 4rem 0 1rem; scroll-margin-top: 4.5rem; }
+    .part + .part { border-top: 1px solid rgba(111, 146, 121, .35); }
+    .part-label { display: block; font-family: var(--font-body); font-size: .85rem; letter-spacing: .08em; text-transform: uppercase; color: var(--sage); margin-bottom: .4rem; }
+    .part > h2 { font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 500; margin-bottom: 1.5rem; }
+    .step { padding: 1.5rem 0; }
+    .step > h3 { font-family: var(--font-head); font-size: clamp(1.4rem, 2.6vw, 1.8rem); font-weight: 500; margin-bottom: .5rem; }
+    .step ul, .part ul { padding-left: 1.2rem; }
+    .step li, .part li { margin-bottom: .5rem; }
+    .step li ul { margin-top: .5rem; }
+
+    /* ---------- Text and images side by side, alternating; stacked on mobile ---------- */
+    .weave { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin: 1.5rem 0; }
+    .weave--flip > .weave-media { order: -1; }
+    .weave-text > :last-child { margin-bottom: 0; }
+    .weave-media { display: grid; gap: 1.5rem; }
+
+    /* ---------- Image slots: grey boxes to swap for <img> later ---------- */
+    .slot { margin: 0; }
+    .slot-box {
+      display: grid; place-items: center; text-align: center; aspect-ratio: 16 / 10;
+      background: #3d423f; color: #e4e6e3; border-radius: .9rem; padding: 1.2rem; font-size: .9rem;
+    }
+    .slot img { width: 100%; height: auto; border-radius: .9rem; }
+    .slot figcaption { font-size: .9rem; color: var(--sage); margin-top: .6rem; }
+    .slot--wide .slot-box { aspect-ratio: 16 / 9; }
+
+    /* ---------- [FILL IN] and [CHECK] notes ---------- */
+    .todo { outline: 2px dashed var(--gold); outline-offset: 2px; border-radius: .25rem; padding: 0 .2em; background: rgba(232, 200, 96, .1); color: var(--cream); }
+
+    .links-line { margin: 2rem 0 0; }
+
+    @media (max-width: 860px) {
+      .p2-intro, .weave { grid-template-columns: 1fr; gap: 1.5rem; }
+      .weave--flip > .weave-media { order: 0; }
+      .part { padding-top: 3rem; }
+      .overview { padding: .6rem var(--pad); }
+      .overview ol { flex-wrap: nowrap; justify-content: flex-start; gap: .4rem; overflow-x: auto; }
+      .overview li { flex: 0 0 auto; }
+      .overview a { padding: .4rem .75rem; font-size: .8rem; white-space: nowrap; }
+      .part { scroll-margin-top: 4rem; }
+    }
+
+    /* ==========================================================
+       Sky theme: only applies with <body class="theme-void">.
+       The page floats in the sky of the Unreal Engine 5 demo level (the void).
+       ========================================================== */
+    .theme-void {
+      --sky-top: #638caf;
+      --sky-mid: #84acc3;
+      --sky-horizon: #a8c2cb;
+      --panel: rgba(248, 251, 252, .96);   /* near-solid light panel */
+      --panel-text: #12281d;               /* same dark ink as the rest of the site */
+      --panel-muted: #3b5a4a;              /* captions and part labels */
+      --panel-line: #5f7f6a;               /* outlines of the overview buttons */
+      --sky-saturation: 1.15;              /* the colors came from a compressed GIF, so they are boosted a little */
+      background: var(--sky-horizon);
+    }
+
+    /* Sky gradient: fixed behind everything */
+    .theme-void .sky { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+    .theme-void .sky::before {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-mid) 45%, var(--sky-horizon) 100%);
+      filter: saturate(var(--sky-saturation));
+    }
+    /* Clouds: 200vw wide, the same pattern twice; only transform is animated */
+    .theme-void .sky-clouds {
+      position: absolute; top: 0; left: 0; width: 200vw; height: 100%;
+      animation: void-drift 180s linear infinite; will-change: transform;
+    }
+    /* The blurred cloud layer itself never moves. It reaches 10vw past both ends so the blur never fades at the screen edge. */
+    .theme-void .sky-cloudset {
+      position: absolute; top: -5%; bottom: -5%; left: -10vw; width: 220vw;
+      background-repeat: repeat-x; background-size: 100vw 100%; background-position: 10vw 0;
+      filter: blur(30px);
+      background-image:
+        radial-gradient(11.7vw 4.2vw at 18% 16%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.85) 35%, rgba(255,255,255,0.42) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(6.5vw 3.4vw at 22% 13%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.8) 35%, rgba(255,255,255,0.4) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(9.1vw 3.1vw at 52% 10%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 35%, rgba(255,255,255,0.35) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(13.0vw 4.4vw at 78% 24%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.85) 35%, rgba(255,255,255,0.42) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(7.2vw 3.6vw at 74% 21%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.75) 35%, rgba(255,255,255,0.38) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(15.6vw 4.9vw at 34% 42%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 35%, rgba(255,255,255,0.35) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(7.8vw 3.9vw at 38% 39%, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.65) 35%, rgba(255,255,255,0.33) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(7.8vw 2.9vw at 88% 55%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.6) 35%, rgba(255,255,255,0.3) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(10.4vw 3.4vw at 12% 66%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.75) 35%, rgba(255,255,255,0.38) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(14.3vw 3.9vw at 60% 74%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.8) 35%, rgba(255,255,255,0.4) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(6.5vw 3.1vw at 56% 71%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 35%, rgba(255,255,255,0.35) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(11.7vw 3.1vw at 44% 88%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.6) 35%, rgba(255,255,255,0.3) 65%, rgba(255,255,255,0) 100%);
+    }
+    @keyframes void-drift { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+
+    /* Content sits on light panels, never directly on the sky */
+    .theme-void .band-pine { background: transparent; color: var(--panel-text); }
+    .theme-void .panel {
+      background: var(--panel); color: var(--panel-text);
+      border-radius: 1.6rem; box-shadow: 0 .8rem 2.4rem rgba(38, 72, 102, .18);
+    }
+    .theme-void .intro { padding-top: 2.5rem; }
+    .theme-void .intro .panel { padding: clamp(1.5rem, 4vw, 3rem); }
+    .theme-void .intro .project-title { padding: 0; }
+    .theme-void .intro .p2-hook { padding: 0; }
+    .theme-void .part { padding: clamp(1.5rem, 4vw, 3rem); margin-top: 2rem; }
+    .theme-void .part + .part { border-top: 0; }
+    .theme-void .part-label,
+    .theme-void .slot figcaption { color: var(--panel-muted); }
+    .theme-void .role-box { box-shadow: inset 0 0 0 1px rgba(18, 40, 29, .12); }
+    .theme-void .slot-box { background: #d3dadd; color: #26313a; }
+    .theme-void .todo { color: var(--panel-text); background: rgba(232, 200, 96, .3); outline-color: #806300; }
+    .theme-void main :focus-visible { outline-color: var(--panel-text); }
+
+    /* Overview buttons on a light bar */
+    .theme-void .overview { background: var(--panel); border-bottom: 1px solid rgba(18, 40, 29, .12); box-shadow: 0 .3rem 1rem rgba(38, 72, 102, .12); }
+    .theme-void .overview a { color: var(--panel-text); border-color: var(--panel-line); }
+    .theme-void .overview a:hover { border-color: var(--panel-text); }
+    .theme-void .overview a[aria-current="true"] { background: var(--moss); color: var(--cream); border-color: var(--moss); }
+
+    /* Small screens: fewer, smaller-blur clouds */
+    @media (max-width: 600px) {
+      .theme-void .sky-cloudset {
+        filter: blur(20px);
+        background-image:
+        radial-gradient(20.8vw 7.8vw at 20% 14%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.85) 35%, rgba(255,255,255,0.42) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(23.4vw 8.5vw at 70% 26%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.8) 35%, rgba(255,255,255,0.4) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(26.0vw 7.8vw at 35% 48%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 35%, rgba(255,255,255,0.35) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(18.2vw 6.5vw at 76% 66%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 35%, rgba(255,255,255,0.35) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(20.8vw 6.5vw at 28% 82%, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.65) 35%, rgba(255,255,255,0.33) 65%, rgba(255,255,255,0) 100%);
+      }
+    }
+
+    /* Reduced motion: clouds stay still */
+    @media (prefers-reduced-motion: reduce) {
+      .theme-void .sky-clouds { animation: none; }
+    }
+  </style>
+</head>
+<body class="theme-void">
+<!-- Sky theme: fixed background layers behind the page (styles under .theme-void) -->
+<div class="sky" aria-hidden="true">
+  <div class="sky-clouds"><div class="sky-cloudset"></div></div>
+</div>
+<!--
+  HOW TO ADD A REAL IMAGE
+  Each image slot looks like this:
+    <figure class="slot" data-slot="paint-overs" data-alt="...">
+      <div class="slot-box" role="img" aria-label="...">Image slot: ...</div>
+      <figcaption>...</figcaption>
+    </figure>
+  Replace only the <div class="slot-box" ...>...</div> line with:
+    <img src="images/your-file.jpg" alt="(copy the data-alt text)" loading="lazy">
+  Keep the <figcaption>. Search for "todo" to find every [FILL IN] and [CHECK].
+-->
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="site-header">
+  <a class="logo" href="index.html" aria-label="Roan Mulder, Level Designer, home">
+    Roan Mulder<span class="logo-role"> - Level Designer</span>
+  </a>
+  <button class="nav-toggle" aria-controls="site-nav" aria-expanded="false">Menu</button>
+  <nav class="site-nav" id="site-nav" aria-label="Main">
+    <ul class="nav-list">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About Me</a></li>
+        <li><a href="projects.html" aria-current="page">Projects</a></li>
+        <li><a aria-disabled="true" title="CV coming soon" style="opacity: .45; cursor: not-allowed; border-bottom-color: transparent">CV</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="https://www.linkedin.com/in/roanmulder/" aria-label="LinkedIn (opens in a new tab)" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9.75h4V21H3V9.75zm6.5 0h3.83v1.54h.06c.53-1 1.84-2.07 3.78-2.07 4.04 0 4.78 2.66 4.78 6.12V21h-4v-4.72c0-1.13-.02-2.58-1.57-2.58-1.57 0-1.81 1.23-1.81 2.5V21h-4V9.75z"/></svg></a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="content" class="band-pine">
+  <section class="section intro" aria-labelledby="page-title">
+    <div class="section-inner panel">
+      <h1 class="project-title" id="page-title">Void-Based Platformer Level Design Toolkit</h1>
+      <p class="p2-hook">Build Mario Sunshine-style void levels in Unreal Engine 5 with ready-made, beginner-friendly parts.</p>
+      <div class="p2-intro">
+      <!-- The old page (mario-toolkit.html) embeds the gameplay video from YouTube (https://www.youtube.com/embed/2UT7SS-zG0E) and uses images/mario-cover.gif as its cover. Either could fill this slot. -->
+      <figure class="slot slot--wide" data-slot="showcase" data-alt="Showcase video of the demo level built with the toolkit">
+        <div class="slot-box" role="img" aria-label="Placeholder: showcase video, or a GIF of the demo level">Image slot: showcase video, or a GIF of the demo level</div>
+        <figcaption>The showcase video. <span class="todo">[CHECK: say whether it was recorded before the color pass]</span></figcaption>
+      </figure>
+
+      <aside class="role-box" aria-labelledby="role-title">
+        <h2 id="role-title">At a glance</h2>
+        <dl class="facts">
+          <dt>My role</dt><dd>Solo level designer</dd>
+          <dt>Time</dt><dd>8 weeks</dd>
+          <dt>Engine</dt><dd>Unreal Engine 5.6, Blueprints</dd>
+          <dt>Type</dt><dd>School project</dd>
+        </dl>
+        <h3>What I did</h3>
+        <ul>
+          <li>Turned research on three platformers into the design of a toolkit with eight ready-made elements.</li>
+          <li>Tested three technical approaches and chose the most beginner-friendly one.</li>
+          <li>Playtested the demo level, changed it in two iterations, and wrote a beginner-friendly How-To guide.</li>
+        </ul>
+      </aside>
+      </div>
+    </div>
+  </section>
+
+  <nav class="overview" aria-label="Parts of this page">
+    <ol>
+      <li><a href="#what">1. What it is</a></li>
+      <li><a href="#how">2. How I made it</a></li>
+      <li><a href="#takeaway">3. Takeaway</a></li>
+    </ol>
+  </nav>
+
+  <div class="section" style="padding-top:0">
+    <div class="section-inner">
+
+      <!-- ================= PART 1 ================= -->
+      <section class="part panel" id="what" aria-labelledby="what-title">
+        <h2 id="what-title"><span class="part-label">Part 1</span>What it is</h2>
+
+        <div class="weave">
+          <div class="weave-text">
+            <p>The secret levels in Super Mario Sunshine are platforming challenges over an empty space. One missed jump and you fall. I turned the behaviors of those levels into parts that anyone can add to their own meshes (the 3D objects a level is built from) in Unreal Engine 5, with little to no Blueprint work (Blueprints are Unreal's visual scripting: you connect blocks instead of writing code). The Sunshine look is kept for the demo level only.</p>
+            <p>It's made for three groups: Unreal Engine 5 beginners who want to try level design, fans of 3D platformers who want to recreate secret levels, and advanced users who want to expand an existing toolkit.</p>
+          </div>
+          <div class="weave-media">
+            <figure class="slot" data-slot="demo-level" data-alt="The demo level seen from the side, with the start, the hardest section and the goal marked">
+              <div class="slot-box" role="img" aria-label="Placeholder: the demo level, with the start, hardest section and goal marked">Image slot: the demo level, with the start, hardest section and goal marked</div>
+              <figcaption>The demo level. <span class="todo">[FILL IN: label what the reader should look at]</span></figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="weave weave--flip">
+          <div class="weave-text">
+            <p><strong>The eight elements:</strong></p>
+            <ul>
+              <li><strong>Simple movement:</strong> moves a platform along an axis.</li>
+              <li><strong>Simple rotation:</strong> spins a platform around any axis.</li>
+              <li><strong>Disappearing platform:</strong> vanishes and returns on a timer or when stepped on, including alternating patterns.</li>
+              <li><strong>Bouncing platform:</strong> a trampoline-style bounce, or a balloon that launches the player in an arc and can be chained.</li>
+              <li><strong>Spline moving platform:</strong> follows a drawn path and can pause or rotate at points along it.</li>
+              <li><strong>Void actor:</strong> restarts the level when the player falls.</li>
+              <li><strong>End collectable:</strong> completes the level.</li>
+              <li><strong>Regular collectable:</strong> coins that can be required to unlock the end collectable.</li>
+            </ul>
+          </div>
+          <div class="weave-media">
+            <figure class="slot" data-slot="eight-elements" data-alt="Grid of eight clips, one for each toolkit element, shown on its own in the museum level">
+              <div class="slot-box" role="img" aria-label="Placeholder: grid of the eight elements, from the museum level or How-To GIFs">Image slot: grid of the eight elements, from the museum level or How-To GIFs</div>
+              <figcaption>The eight elements, each shown in the museum level so a new user can see what one piece does on its own.</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PART 2 ================= -->
+      <section class="part panel" id="how" aria-labelledby="how-title">
+        <h2 id="how-title"><span class="part-label">Part 2</span>How I made it</h2>
+
+        <div class="step">
+          <h3>1. Finding the idea</h3>
+          <div class="weave">
+            <div class="weave-text">
+              <p>My first proposal was a Banjo-Kazooie character controller. I changed the concept before the first review because the Sunshine secret levels were closer to what a level designer actually does. A review of my first Sunshine draft pushed it further: the preset Sunshine meshes were too narrow, so I switched to behaviors that work on any mesh. In total there were five drafts over three weeks.</p>
+            </div>
+            <div class="weave-media">
+              <figure class="slot" data-slot="proposal-drafts" data-alt="Five proposal documents side by side, from the Banjo-Kazooie controller on the left to the final toolkit on the right">
+                <div class="slot-box" role="img" aria-label="Placeholder: the five proposal drafts, side by side in order">Image slot: the five proposal drafts, side by side in order</div>
+                <figcaption>The five proposal drafts, from the Banjo-Kazooie controller (left) to the final toolkit (right). The list of obstacles gets shorter and more organised each time.</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <h3>2. Research</h3>
+          <div class="weave weave--flip">
+            <div class="weave-text">
+              <p>I researched why these levels work before deciding what to build.</p>
+              <ul>
+                <li>I played Sunshine's secret courses, listed which obstacles appear in each, and ranked them from must have to won't have.</li>
+              </ul>
+            </div>
+            <div class="weave-media">
+              <!-- Clear match on the old page: images/mario-breakdown.jpg (the secret levels broken into parts, ranked must have to won't have). -->
+              <figure class="slot" data-slot="must-have-chart" data-alt="Chart of every obstacle from the secret levels, sorted from must have to won't have, with the ones in the finished toolkit outlined in red">
+                <div class="slot-box" role="img" aria-label="Placeholder: must-have chart from Miro, with the red-outlined elements">Image slot: must-have chart from Miro, with the red-outlined elements</div>
+                <figcaption>Every obstacle from the secret levels, ranked. The red outlines are what the finished toolkit can recreate.</figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <div class="weave">
+            <div class="weave-text">
+              <ul>
+                <li>A pattern analysis of ten games found that most use void levels as optional, higher-difficulty side content.</li>
+                <li>A player experience study compared Sunshine, A Hat in Time and Penny's Big Breakaway, using developer interviews, forum discussions, a playthrough article and reviews. Two findings shaped the toolkit:
+                  <ul>
+                    <li>Sunshine's secret levels were mandatory, and the lead designer later said he regretted that. The other two games made them optional, and players found them less frustrating.</li>
+                    <li>Players enjoy these levels because they are pure platforming.</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+            <div class="weave-media">
+              <figure class="slot" data-slot="secret-level-comparison" data-alt="Table comparing Super Mario Sunshine, A Hat in Time and Penny's Big Breakaway: whether their challenge levels are mandatory or optional, and how frustrating players found them">
+                <div class="slot-box" role="img" aria-label="Placeholder: small table comparing mandatory vs optional secret levels across the three games">Image slot: small table comparing mandatory vs optional secret levels across the three games</div>
+                <figcaption>How each game handles its challenge levels, and why optional levels caused less frustration.</figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <div class="weave weave--flip">
+            <div class="weave-text">
+              <ul>
+                <li>A Hat in Time's modding tools give beginners a Time Rift template to start from. That inspired me to build a similar starting point for Unreal Engine 5 beginners.</li>
+              </ul>
+            </div>
+            <div class="weave-media">
+              <figure class="slot" data-slot="pattern-analysis" data-alt="Cropped screenshot of the pattern analysis, or of the A Hat in Time modding template">
+                <div class="slot-box" role="img" aria-label="Placeholder: cropped screenshot of the pattern analysis, or the A Hat in Time modding template">Image slot: cropped screenshot of the pattern analysis, or the A Hat in Time modding template</div>
+                <figcaption><span class="todo">[FILL IN: one line on what the reader is looking at]</span></figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <h3>3. Choosing the technical approach</h3>
+          <div class="weave">
+            <div class="weave-text">
+              <p>I tested three ways to build a rotating platform:</p>
+              <ul>
+                <li><strong>Timelines</strong> (Unreal's built-in animation curves): worked, but weren't modular. I knew them best, so this was a deliberate step out of my comfort zone.</li>
+                <li><strong>Custom actor components</strong> (pieces of logic you attach to an object): the logic lives inside the component, so a user drags a mesh into the level, adds the component, and it works. This became the backbone of the toolkit.</li>
+                <li><strong>Target points</strong> (markers you place in the level): moved a mesh between two points, but placing the points was too fiddly for a beginner tool.</li>
+              </ul>
+            </div>
+            <div class="weave-media">
+              <figure class="slot" data-slot="tech-experiments" data-alt="Three small clips of a rotating platform, built with Timelines, with an actor component and with target points">
+                <div class="slot-box" role="img" aria-label="Placeholder: three small screenshots or GIFs, one per experiment">Image slot: three small screenshots or GIFs, one per experiment</div>
+                <figcaption>The three experiments. Only the middle one (actor components) made it into the toolkit.</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <h3>4. Planning</h3>
+          <div class="weave weave--flip">
+            <div class="weave-text">
+              <ul>
+                <li>I painted over reference footage to define each core behavior: its direction, rotation axes and states. These became my plan for building each one.</li>
+                <li>I started the Conditions of Satisfaction document (a list of what the finished toolkit has to do) in week 4 and updated it every week.</li>
+                <li>The scope grew from research. A Hat in Time's balloons led to the bouncing platform. <span class="todo">[CHECK: alternating platforms became a setting on the disappearing platform, and rotation sequences became rotation points on the spline platform. Is that right?]</span></li>
+              </ul>
+            </div>
+            <div class="weave-media">
+              <!-- Clear match on the old page: images/mario-paintovers.jpg (paint-overs of the five main behaviors). -->
+              <figure class="slot" data-slot="paint-overs" data-alt="Five reference screenshots painted over with arrows showing movement direction, rotation axes and states">
+                <div class="slot-box" role="img" aria-label="Placeholder: the five paint-overs">Image slot: the five paint-overs</div>
+                <figcaption>A paint-over becomes a component. Arrows show movement direction and rotation axes.</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <h3>5. Building and solving problems</h3>
+          <div class="weave">
+            <div class="weave-text">
+              <ul>
+                <li><strong>Spline rotation:</strong> a cube riding the spline turned diagonally on its second rotation. The rotation was blending the long way round. Enabling Shortest Path (a setting that makes it turn the short way) fixed it.</li>
+                <li><strong>Cube fade:</strong> on a six-sided cube with six materials, only one face faded. I solved it with a Sequence node (a Blueprint block that runs several steps one after another) and six parallel branches, one per material.</li>
+                <li><strong>Coin system:</strong> regular coins link themselves to the end collectable, which counts them and shows a counter. When collection is required, the coins turn red and the end collectable only appears once all are collected.</li>
+              </ul>
+            </div>
+            <div class="weave-media">
+              <figure class="slot" data-slot="spline-fix" data-alt="Two clips of a cube on a spline path: before the fix it turns diagonally, after the fix it turns straight">
+                <div class="slot-box" role="img" aria-label="Placeholder: before and after GIFs of the spline platform turning">Image slot: before and after GIFs of the spline platform turning</div>
+                <figcaption>Before the fix (diagonal turn) and after (straight turn).</figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <div class="weave weave--flip">
+            <div class="weave-text">
+              <ul>
+                <li><strong>Designed for beginners:</strong> settings use dropdowns with working defaults, editor guides show what each setting does, and Blueprint comments are color-coded by purpose.</li>
+              </ul>
+            </div>
+            <div class="weave-media">
+              <figure class="slot" data-slot="editor-guides" data-alt="A spline path with green, cyan and red spheres marking its points, next to the settings panel with dropdown menus">
+                <div class="slot-box" role="img" aria-label="Placeholder: the editor guides and the settings panel">Image slot: the editor guides and the settings panel</div>
+                <figcaption>The colored spheres on the spline show what each point does (green pauses, cyan rotates, red marks the start and end). The settings panel uses plain dropdowns.</figcaption>
+              </figure>
+              <figure class="slot" data-slot="blueprint-comments" data-alt="A Blueprint graph with its comment boxes colored red, yellow, green, blue and gray">
+                <div class="slot-box" role="img" aria-label="Placeholder: Blueprint screenshot with color-coded comments">Image slot: Blueprint screenshot with color-coded comments</div>
+                <figcaption>Red is core logic, yellow is debug drawing, green is calculations, blue is widgets (on-screen menus and counters), gray is nested notes.</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <h3>6. Playtesting</h3>
+          <div class="weave">
+            <div class="weave-text">
+              <p>At Play Day (a playtest day at school) my lecturer played the demo level and gave four points: make the blocks colorful, add floors under the harder sections, add collectables, and add annotations. I turned them into two iterations.</p>
+            </div>
+            <div class="weave-media">
+              <!-- Possible match on the old page: images/mario-iteration-1.jpg and images/mario-iteration-2.jpg (layout iterations annotated with the feedback). -->
+              <figure class="slot" data-slot="playtest-feedback" data-alt="Feedback notes from Play Day next to the changes made in response">
+                <div class="slot-box" role="img" aria-label="Placeholder: Miro feedback notes or a layout iteration screenshot">Image slot: Miro feedback notes or a layout iteration screenshot</div>
+                <figcaption>The feedback from Play Day and what I changed in response.</figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <div class="weave weave--flip">
+            <div class="weave-text">
+              <ul>
+                <li><strong>Iteration 1:</strong> short explanations at the resting points, an extra resting point, and the coin system. <span class="todo">[CHECK: confirm the order against Miro]</span></li>
+                <li><strong>Iteration 2:</strong> six color materials, a multicolored cube so rotation is easy to read, and floors under the hardest sections, because the demo should be a showcase, not a punishment.</li>
+              </ul>
+            </div>
+            <div class="weave-media">
+              <!-- Possible match on the old page: images/mario-iteration-0.jpg (all-white layout) and images/mario-iteration-2.jpg (colored layout). -->
+              <figure class="slot" data-slot="playtest-before-after" data-alt="The demo level all white on the left, and colored with floors and signs on the right">
+                <div class="slot-box" role="img" aria-label="Placeholder: the all-white demo level next to the colored version">Image slot: the all-white demo level next to the colored version</div>
+                <figcaption>Before and after. <span class="todo">[FILL IN: point out the colors, floors and signs]</span></figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <h3>7. Documenting it</h3>
+          <div class="weave">
+            <div class="weave-text">
+              <p>I wrote a How-To so a beginner can install the toolkit and build a first level. It has a chapter for each element, a complete level setup guide, a section on adding new content, and troubleshooting. Claude drafted the template and most of the troubleshooting section. I rewrote the draft and verified the entries, and the document credits this at the end.</p>
+            </div>
+            <div class="weave-media">
+              <!-- Match on the old page: images/mario-howto.jpg (How-To table of contents and pages). That file is not in images/ yet. -->
+              <figure class="slot" data-slot="howto-pages" data-alt="The How-To document's table of contents next to one element chapter">
+                <div class="slot-box" role="img" aria-label="Placeholder: the How-To table of contents or a sample element page">Image slot: the How-To table of contents or a sample element page</div>
+                <figcaption>Each element has its own chapter, followed by a level setup guide.</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PART 3 ================= -->
+      <section class="part panel" id="takeaway" aria-labelledby="takeaway-title">
+        <h2 id="takeaway-title"><span class="part-label">Part 3</span>Takeaway</h2>
+
+        <div class="weave weave--flip">
+          <div class="weave-text">
+            <ul>
+              <li><strong>What I'm proud of:</strong> clarity. Editor guides, a clear settings panel, and tooltips and comments turn a lot of Blueprint work into a few minutes of setup. <span class="todo">[FILL IN: a real comparison, or soften this to "much less setup"]</span></li>
+              <li><strong>What I learned:</strong> clear comments and tooltips matter a lot for beginner-friendly tools, and they help me when I come back to old work.</li>
+              <li><strong>What I'd do differently:</strong> start using AI as a brainstorming partner earlier, since the first half of the block was a struggle until I started talking ideas through. I'd also experiment more before settling on a solution.</li>
+            </ul>
+          </div>
+          <div class="weave-media">
+            <!-- Possible match on the old page: images/mario-shot-1.gif to mario-shot-3.gif (screenshots of the demo level). Those files are not in images/ yet. -->
+            <figure class="slot" data-slot="finished-demo" data-alt="The finished, colored demo level being played">
+              <div class="slot-box" role="img" aria-label="Placeholder: finished demo level in action">Image slot: finished demo level in action</div>
+              <figcaption>The finished demo level.</figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <!-- Already on the site: the How-To PDF is files/Mario-Toolkit-How-To.pdf, and the old page's gameplay video is https://www.youtube.com/watch?v=2UT7SS-zG0E -->
+        <p class="links-line"><strong>Links:</strong> <span class="todo">[FILL IN: showcase video]</span> / <span class="todo">[FILL IN: How-To document]</span> / <span class="todo">[FILL IN: itch page]</span></p>
+      </section>
+
+      <p class="section-more"><a class="btn" href="projects.html">Back to projects</a></p>
+    </div>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="footer-inner" style="justify-content: center">
+    <ul class="footer-links">
+      <li><a href="https://www.linkedin.com/in/roanmulder/" target="_blank" rel="noopener">LinkedIn</a></li>
+      <li><a href="https://roanthegamer.itch.io" target="_blank" rel="noopener">itch.io</a></li>
+      <li><a href="mailto:your.email@example.com">Email</a></li>
+    </ul>
+  </div>
+</footer>
+<script src="js/main.js"></script>
+<script>
+  // Overview buttons: highlight the part of the page the reader is in
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('.overview a'));
+    var parts = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+    var bar = document.querySelector('.overview');
+    var ticking = false;
+
+    function update() {
+      ticking = false;
+      var line = bar.getBoundingClientRect().bottom + window.innerHeight * 0.3;
+      var current = 0;
+      parts.forEach(function (part, i) { if (part.getBoundingClientRect().top <= line) current = i; });
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) current = parts.length - 1;
+      links.forEach(function (a, i) {
+        if (i === current) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+      });
+    }
+
+    window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  })();
+</script>
+<!-- Preview card text for the portfolio grid (move later):
+Title: Void-Based Platformer Level Design Toolkit
+Hook: Build Mario Sunshine-style void levels in Unreal Engine 5 with ready-made, beginner-friendly parts.
+Role: Solo level designer
+- Turned research on three platformers into a toolkit of eight ready-made elements
+- Tested three technical approaches and picked the most beginner-friendly
+- Playtested, iterated twice, and wrote a beginner-friendly How-To guide
+-->
+</body>
+</html>
