@@ -15,6 +15,8 @@
   <style>
     /* ---------- Intro: title, hook, showcase and role box ---------- */
     .p2-hook { text-align: center; font-size: clamp(1.1rem, 2vw, 1.35rem); max-width: 44rem; margin: 1rem auto 0; padding: 0 var(--pad); }
+    .intro { padding-top: 0; padding-bottom: 3rem; }
+    .intro .p2-intro { margin-top: 2.5rem; }
     .p2-intro { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2.5rem; align-items: start; }
 
     /* Role box: cream card so it stands apart from the dark page */
@@ -79,9 +81,105 @@
       .overview a { padding: .4rem .75rem; font-size: .8rem; white-space: nowrap; }
       .part { scroll-margin-top: 4rem; }
     }
+
+    /* ==========================================================
+       Sky theme: only applies with <body class="theme-void">.
+       The page floats in the sky of the Unreal Engine 5 demo level (the void).
+       ========================================================== */
+    .theme-void {
+      --sky-top: #638caf;
+      --sky-mid: #84acc3;
+      --sky-horizon: #a8c2cb;
+      --panel: rgba(248, 251, 252, .96);   /* near-solid light panel */
+      --panel-text: #12281d;               /* same dark ink as the rest of the site */
+      --panel-muted: #3b5a4a;              /* captions and part labels */
+      --panel-line: #5f7f6a;               /* outlines of the overview buttons */
+      --sky-saturation: 1.15;              /* the colors came from a compressed GIF, so they are boosted a little */
+      background: var(--sky-horizon);
+    }
+
+    /* Sky gradient: fixed behind everything */
+    .theme-void .sky { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+    .theme-void .sky::before {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-mid) 45%, var(--sky-horizon) 100%);
+      filter: saturate(var(--sky-saturation));
+    }
+    /* Clouds: 200vw wide, the same pattern twice; only transform is animated */
+    .theme-void .sky-clouds {
+      position: absolute; top: 0; left: 0; width: 200vw; height: 100%;
+      animation: void-drift 180s linear infinite; will-change: transform;
+    }
+    /* The blurred cloud layer itself never moves. It reaches 10vw past both ends so the blur never fades at the screen edge. */
+    .theme-void .sky-cloudset {
+      position: absolute; top: -5%; bottom: -5%; left: -10vw; width: 220vw;
+      background-repeat: repeat-x; background-size: 100vw 100%; background-position: 10vw 0;
+      filter: blur(30px);
+      background-image:
+        radial-gradient(11.7vw 4.2vw at 18% 16%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.85) 35%, rgba(255,255,255,0.42) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(6.5vw 3.4vw at 22% 13%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.8) 35%, rgba(255,255,255,0.4) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(9.1vw 3.1vw at 52% 10%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 35%, rgba(255,255,255,0.35) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(13.0vw 4.4vw at 78% 24%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.85) 35%, rgba(255,255,255,0.42) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(7.2vw 3.6vw at 74% 21%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.75) 35%, rgba(255,255,255,0.38) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(15.6vw 4.9vw at 34% 42%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 35%, rgba(255,255,255,0.35) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(7.8vw 3.9vw at 38% 39%, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.65) 35%, rgba(255,255,255,0.33) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(7.8vw 2.9vw at 88% 55%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.6) 35%, rgba(255,255,255,0.3) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(10.4vw 3.4vw at 12% 66%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.75) 35%, rgba(255,255,255,0.38) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(14.3vw 3.9vw at 60% 74%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.8) 35%, rgba(255,255,255,0.4) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(6.5vw 3.1vw at 56% 71%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 35%, rgba(255,255,255,0.35) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(11.7vw 3.1vw at 44% 88%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.6) 35%, rgba(255,255,255,0.3) 65%, rgba(255,255,255,0) 100%);
+    }
+    @keyframes void-drift { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+
+    /* Content sits on light panels, never directly on the sky */
+    .theme-void .band-pine { background: transparent; color: var(--panel-text); }
+    .theme-void .panel {
+      background: var(--panel); color: var(--panel-text);
+      border-radius: 1.6rem; box-shadow: 0 .8rem 2.4rem rgba(38, 72, 102, .18);
+    }
+    .theme-void .intro { padding-top: 2.5rem; }
+    .theme-void .intro .panel { padding: clamp(1.5rem, 4vw, 3rem); }
+    .theme-void .intro .project-title { padding: 0; }
+    .theme-void .intro .p2-hook { padding: 0; }
+    .theme-void .part { padding: clamp(1.5rem, 4vw, 3rem); margin-top: 2rem; }
+    .theme-void .part + .part { border-top: 0; }
+    .theme-void .part-label,
+    .theme-void .slot figcaption { color: var(--panel-muted); }
+    .theme-void .role-box { box-shadow: inset 0 0 0 1px rgba(18, 40, 29, .12); }
+    .theme-void .slot-box { background: #d3dadd; color: #26313a; }
+    .theme-void .todo { color: var(--panel-text); background: rgba(232, 200, 96, .3); outline-color: #806300; }
+    .theme-void main :focus-visible { outline-color: var(--panel-text); }
+
+    /* Overview buttons on a light bar */
+    .theme-void .overview { background: var(--panel); border-bottom: 1px solid rgba(18, 40, 29, .12); box-shadow: 0 .3rem 1rem rgba(38, 72, 102, .12); }
+    .theme-void .overview a { color: var(--panel-text); border-color: var(--panel-line); }
+    .theme-void .overview a:hover { border-color: var(--panel-text); }
+    .theme-void .overview a[aria-current="true"] { background: var(--moss); color: var(--cream); border-color: var(--moss); }
+
+    /* Small screens: fewer, smaller-blur clouds */
+    @media (max-width: 600px) {
+      .theme-void .sky-cloudset {
+        filter: blur(20px);
+        background-image:
+        radial-gradient(20.8vw 7.8vw at 20% 14%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.85) 35%, rgba(255,255,255,0.42) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(23.4vw 8.5vw at 70% 26%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.8) 35%, rgba(255,255,255,0.4) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(26.0vw 7.8vw at 35% 48%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 35%, rgba(255,255,255,0.35) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(18.2vw 6.5vw at 76% 66%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 35%, rgba(255,255,255,0.35) 65%, rgba(255,255,255,0) 100%),
+        radial-gradient(20.8vw 6.5vw at 28% 82%, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.65) 35%, rgba(255,255,255,0.33) 65%, rgba(255,255,255,0) 100%);
+      }
+    }
+
+    /* Reduced motion: clouds stay still */
+    @media (prefers-reduced-motion: reduce) {
+      .theme-void .sky-clouds { animation: none; }
+    }
   </style>
 </head>
-<body>
+<body class="theme-void">
+<!-- Sky theme: fixed background layers behind the page (styles under .theme-void) -->
+<div class="sky" aria-hidden="true">
+  <div class="sky-clouds"><div class="sky-cloudset"></div></div>
+</div>
 <!--
   HOW TO ADD A REAL IMAGE
   Each image slot looks like this:
@@ -112,11 +210,11 @@
 </header>
 
 <main id="content" class="band-pine">
-  <h1 class="project-title">Void-Based Platformer Level Design Toolkit</h1>
-  <p class="p2-hook">Build Mario Sunshine-style void levels in Unreal Engine 5 with ready-made, beginner-friendly parts.</p>
-
-  <section class="section" style="padding-top:2.5rem; padding-bottom:3rem" aria-label="Showcase and my role">
-    <div class="section-inner p2-intro">
+  <section class="section intro" aria-labelledby="page-title">
+    <div class="section-inner panel">
+      <h1 class="project-title" id="page-title">Void-Based Platformer Level Design Toolkit</h1>
+      <p class="p2-hook">Build Mario Sunshine-style void levels in Unreal Engine 5 with ready-made, beginner-friendly parts.</p>
+      <div class="p2-intro">
       <!-- The old page (mario-toolkit.html) embeds the gameplay video from YouTube (https://www.youtube.com/embed/2UT7SS-zG0E) and uses images/mario-cover.gif as its cover. Either could fill this slot. -->
       <figure class="slot slot--wide" data-slot="showcase" data-alt="Showcase video of the demo level built with the toolkit">
         <div class="slot-box" role="img" aria-label="Placeholder: showcase video, or a GIF of the demo level">Image slot: showcase video, or a GIF of the demo level</div>
@@ -138,6 +236,7 @@
           <li>Playtested the demo level, changed it in two iterations, and wrote a beginner-friendly How-To guide.</li>
         </ul>
       </aside>
+      </div>
     </div>
   </section>
 
@@ -153,7 +252,7 @@
     <div class="section-inner">
 
       <!-- ================= PART 1 ================= -->
-      <section class="part" id="what" aria-labelledby="what-title">
+      <section class="part panel" id="what" aria-labelledby="what-title">
         <h2 id="what-title"><span class="part-label">Part 1</span>What it is</h2>
 
         <div class="weave">
@@ -193,7 +292,7 @@
       </section>
 
       <!-- ================= PART 2 ================= -->
-      <section class="part" id="how" aria-labelledby="how-title">
+      <section class="part panel" id="how" aria-labelledby="how-title">
         <h2 id="how-title"><span class="part-label">Part 2</span>How I made it</h2>
 
         <div class="step">
@@ -391,7 +490,7 @@
       </section>
 
       <!-- ================= PART 3 ================= -->
-      <section class="part" id="takeaway" aria-labelledby="takeaway-title">
+      <section class="part panel" id="takeaway" aria-labelledby="takeaway-title">
         <h2 id="takeaway-title"><span class="part-label">Part 3</span>Takeaway</h2>
 
         <div class="weave weave--flip">
