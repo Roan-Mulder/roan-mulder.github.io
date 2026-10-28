@@ -122,7 +122,9 @@
     .drawer-title { font-family: var(--font-head); font-weight: 600; font-size: 1.5rem; margin: 0 0 .15rem; }
     .drawer-group { font-size: .82rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: #3b5a4a; margin: 0 0 .7rem; }
     .drawer-desc { margin: 0; }
-    .drawer-media { grid-area: media; position: relative; aspect-ratio: 16 / 9; border-radius: .8rem; overflow: hidden; background: #d3dadd; }
+    .drawer-clipbox { grid-area: media; min-width: 0; }
+    .drawer-strip { border-radius: .8rem; }
+    .drawer-media { position: relative; aspect-ratio: 16 / 9; border-radius: .8rem; overflow: hidden; background: #d3dadd; }
     /* The box takes the video's own shape once it loads (see the script), so nothing is cropped */
     .drawer-video { display: block; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .2s; }
     .drawer-media.is-ready .drawer-video { opacity: 1; cursor: zoom-in; }
@@ -156,6 +158,34 @@
     .lightbox-close:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
     .lightbox-hint { display: none; margin: 0; padding: 0 1rem; font-size: .9rem; color: #fff; text-align: center; }
 
+    /* Clip tabs (only when an element has two or more clips) */
+    .clip-tabs { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+    .clip-tabs[hidden] { display: none; }
+    .clip-tab {
+      min-height: 44px; padding: .35rem .95rem; font: inherit; font-size: .85rem; line-height: 1.2;
+      color: #12281d; background: #fff; border: 2px solid #5f7f6a; border-radius: 999px; cursor: pointer;
+    }
+    .clip-tab:hover { border-color: #12281d; }
+    .clip-tab[aria-selected="true"] { color: var(--cream); background: var(--moss); border-color: #12281d; font-weight: 600; box-shadow: inset 0 0 0 1px #12281d; }
+    .clip-tab:focus-visible { outline: 3px solid #12281d; outline-offset: 2px; }
+
+    /* Wide clips (wider than 2.4:1) */
+    .wide-hint { display: none; margin: .45rem 0 0; font-size: .85rem; color: #3b5a4a; }
+    .drawer.is-wide .drawer-body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "media" "enlarge"; }
+    .drawer-strip:focus-visible, .lightbox-stage:focus-visible { outline: 3px solid #12281d; outline-offset: 3px; }
+
+    /* Lightbox: tabs, placeholder and sideways scrolling */
+    .lightbox .clip-tabs { justify-content: center; margin: 0; padding: 0 1rem; }
+    .lightbox .clip-tab { color: #fff; background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .7); }
+    .lightbox .clip-tab:hover { border-color: #fff; }
+    .lightbox .clip-tab[aria-selected="true"] { color: #111; background: #fff; border-color: #fff; box-shadow: none; }
+    .lightbox .clip-tab:focus-visible, .lightbox-stage:focus-visible { outline-color: #fff; }
+    .lightbox .wide-hint { color: #fff; text-align: center; margin: 0; }
+    .lightbox-ph { display: none; width: min(90vw, calc(78vh * 16 / 9)); aspect-ratio: 16 / 9; place-content: center; gap: .3rem; padding: 1rem; text-align: center; border-radius: .8rem; background: #d3dadd; color: #26313a; }
+    .lightbox.is-missing .lightbox-ph { display: grid; }
+    .lightbox.is-missing .lightbox-stage video { display: none; }
+    .lightbox-stage.is-scroll { justify-content: flex-start; overflow-x: auto; overscroll-behavior-x: contain; }
+
     @media (max-width: 640px) {
       .desk { padding: 1.1rem 1rem 1.3rem; }
       .desk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -168,6 +198,11 @@
       .drawer-title { font-size: 1.3rem; }
       .lightbox-stage video { max-width: 100vw; max-height: 80vh; }
       .lightbox-close { width: 48px; height: 48px; }
+      /* Wide clip on a phone: a sideways-scrolling strip, at least 220px tall so the text stays readable */
+      .drawer.is-wide .drawer-strip { overflow-x: auto; overscroll-behavior-x: contain; }
+      .drawer.is-wide .drawer-media { height: 220px; width: calc(220px * var(--ratio, 3)); max-width: none; aspect-ratio: auto !important; }
+      .drawer.is-wide .drawer-clipbox .wide-hint, .lightbox.is-wide .lightbox-wide-hint { display: block; }
+      .lightbox-ph { width: 100vw; border-radius: 0; }
       .lightbox-close svg { width: 22px; height: 22px; }
     }
     @media (max-width: 640px) and (orientation: portrait) {
@@ -408,9 +443,15 @@
                   <p class="drawer-group"></p>
                   <p class="drawer-desc"></p>
                 </div>
-                <div class="drawer-media">
-                  <video class="drawer-video" muted loop playsinline preload="none"></video>
-                  <div class="drawer-ph"><strong class="drawer-ph-name"></strong><span>Showcase video coming soon</span></div>
+                <div class="drawer-clipbox">
+                  <div class="drawer-strip">
+                    <div class="drawer-media" id="drawer-media">
+                      <video class="drawer-video" muted loop playsinline preload="none"></video>
+                      <div class="drawer-ph"><strong class="drawer-ph-name"></strong><span>Showcase video coming soon</span></div>
+                    </div>
+                  </div>
+                  <p class="wide-hint">Swipe sideways to see the whole clip</p>
+                  <div class="clip-tabs" role="tablist" hidden></div>
                 </div>
                 <button type="button" class="drawer-enlarge" disabled>Click to enlarge</button>
               </div>
@@ -651,7 +692,10 @@
   <button type="button" class="lightbox-close" aria-label="Close enlarged video">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
   </button>
-  <div class="lightbox-stage"></div>
+  <div class="lightbox-stage" id="el-lightbox-stage">
+    <div class="lightbox-ph"><strong class="lightbox-ph-name"></strong><span>Showcase video coming soon</span></div>
+  </div>
+  <p class="wide-hint lightbox-wide-hint">Swipe sideways to see the whole clip</p>
   <p class="lightbox-hint">Rotate your phone for a bigger view.</p>
 </dialog>
 <footer class="site-footer">
@@ -690,22 +734,46 @@
 </script>
 <script>
   /* ==========================================================
-     THE EIGHT ELEMENTS: edit this list to change the buttons and the drawer.
+     THE EIGHT ELEMENTS: edit this list to change the buttons, the drawer and the videos.
      group: "core" (Core Behaviors) or "logic" (Level Logic Actors).
-     file:  the museum video inside MEDIA_FOLDER. The poster image has the same name, ending in .jpg.
-     mobileFile (optional): a smaller copy of the same video, used on phones (640px wide and narrower).
+     clips: one or more videos. With two or more, tabs appear under the video.
+       label      (optional) the tab text. The first clip is called "Showcase" unless it has a label.
+       file       the video inside MEDIA_FOLDER. The poster image has the same name, ending in .jpg.
+       mobileFile (optional) a smaller copy of the same video, used on phones (640px wide and narrower).
+       start, end (optional) seconds. When both are set, only that part of the video loops.
      If you change a name or description, also update the no-JavaScript lists in Part 1.
      ========================================================== */
   var MEDIA_FOLDER = 'images/museum/';
+  var WIDE_RATIO = 2.4;               // clips wider than 2.4:1 count as "wide"
   var ELEMENTS = [
-    { group: 'core',  name: 'Simple movement',        text: 'Moves a platform back and forth along an axis.', file: 'museum-simple-movement.mp4', mobileFile: 'museum-simple-movement-mobile.mp4' },
-    { group: 'core',  name: 'Simple rotation',        text: 'Spins a platform around any axis.', file: 'museum-simple-rotation.mp4' },
-    { group: 'core',  name: 'Disappearing platform',  text: 'Vanishes and returns, on a timer or when stepped on, including alternating patterns.', file: 'museum-disappearing-platform.mp4' },
-    { group: 'core',  name: 'Bouncing platform',      text: 'A trampoline bounce, or a balloon that launches the player in an arc.', file: 'museum-bouncing-platform.mp4' },
-    { group: 'core',  name: 'Spline moving platform', text: 'Follows a drawn path and can pause or rotate at points along it.', file: 'museum-spline-platform.mp4' },
-    { group: 'logic', name: 'Void actor',             text: 'Restarts the level when the player falls.', file: 'museum-void-actor.mp4' },
-    { group: 'logic', name: 'End collectable',        text: 'Completes the level.', file: 'museum-end-collectable.mp4' },
-    { group: 'logic', name: 'Regular collectable',    text: 'Coins that can be required to unlock the end collectable.', file: 'museum-regular-collectable.mp4' }
+    { group: 'core', name: 'Simple movement', text: 'Moves a platform back and forth along an axis.', clips: [
+      { file: 'museum-simple-movement.mp4', mobileFile: 'museum-simple-movement-mobile.mp4' },
+      { label: 'Combined with rotation', file: 'museum-movement-rotation-combined.mp4' }
+    ] },
+    { group: 'core', name: 'Simple rotation', text: 'Spins a platform around any axis.', clips: [
+      { file: 'museum-simple-rotation.mp4' },
+      { label: 'Combined with movement', file: 'museum-movement-rotation-combined.mp4' }
+    ] },
+    { group: 'core', name: 'Disappearing platform', text: 'Vanishes and returns, on a timer or when stepped on, including alternating patterns.', clips: [
+      { file: 'museum-disappearing-platform.mp4' },
+      { label: 'Alternating platforms', file: 'museum-alternating-platforms.mp4' }
+    ] },
+    { group: 'core', name: 'Bouncing platform', text: 'A trampoline bounce, or a balloon that launches the player in an arc.', clips: [
+      { file: 'museum-bouncing-platform.mp4' }
+    ] },
+    { group: 'core', name: 'Spline moving platform', text: 'Follows a drawn path and can pause or rotate at points along it.', clips: [
+      { file: 'museum-spline-platform.mp4' }
+    ] },
+    // The three Level Logic Actors share one video. Fill in start and end (in seconds) to loop each one's part.
+    { group: 'logic', name: 'Void actor', text: 'Restarts the level when the player falls.', clips: [
+      { file: 'museum-level-logic-actors.mp4', start: null, end: null }
+    ] },
+    { group: 'logic', name: 'End collectable', text: 'Completes the level.', clips: [
+      { file: 'museum-level-logic-actors.mp4', start: null, end: null }
+    ] },
+    { group: 'logic', name: 'Regular collectable', text: 'Coins that can be required to unlock the end collectable.', clips: [
+      { file: 'museum-level-logic-actors.mp4', start: null, end: null }
+    ] }
   ];
   var GROUP_NAMES = { core: 'Core Behaviors', logic: 'Level Logic Actors' };
 
@@ -713,13 +781,19 @@
     var desk = document.getElementById('el-desk');
     var drawer = document.getElementById('el-drawer');
     var lightbox = document.getElementById('el-lightbox');
-    if (!desk || !drawer) return;
+    if (!desk || !drawer || !lightbox) return;
 
+    var clipbox = drawer.querySelector('.drawer-clipbox');
+    var strip = drawer.querySelector('.drawer-strip');
     var media = drawer.querySelector('.drawer-media');
     var video = drawer.querySelector('.drawer-video');
     var placeholder = drawer.querySelector('.drawer-ph');
+    var drawerHint = clipbox.querySelector('.wide-hint');
+    var tablist = drawer.querySelector('.clip-tabs');
     var enlarge = drawer.querySelector('.drawer-enlarge');
     var stage = lightbox.querySelector('.lightbox-stage');
+    var lightboxPh = lightbox.querySelector('.lightbox-ph');
+    var lightboxHint = lightbox.querySelector('.lightbox-wide-hint');
     var closeLightbox = lightbox.querySelector('.lightbox-close');
     var overview = document.querySelector('.overview');
 
@@ -728,14 +802,24 @@
     var noHover = window.matchMedia('(hover: none)');
     var DURATION = 340;               // ms, matches the CSS transition
     var buttons = [];
+    var tabs = [];
     var state = 'closed';             // closed, opening, open, closing
-    var current = -1;                 // index of the element in the drawer
+    var current = -1;                 // element in the drawer
+    var currentClip = 0;              // clip of that element
     var pending = null;               // latest click made during an animation
     var timer = null;
+    var loadedFile = null;            // the clip file the <video> holds right now
+    var needsLoad = false;            // a new source is set but not loaded yet
     var triedFull = true;             // false while a phone is trying the smaller mobile copy
+    var segStart = null, segEnd = null;
+    var ratio = 16 / 9;
 
     function onChange(mq, fn) { if (mq.addEventListener) mq.addEventListener('change', fn); else mq.addListener(fn); }
     function make(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+    function isNum(v) { return typeof v === 'number' && isFinite(v); }
+    function play() { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
+    function clipLabel(clip, c) { return clip.label || (c === 0 ? 'Showcase' : 'Clip ' + (c + 1)); }
+    function inLightbox() { return lightbox.open; }
 
     // ---------- Build the desk from ELEMENTS ----------
     ['core', 'logic'].forEach(function (group) {
@@ -778,7 +862,6 @@
     function setExpanded() {
       buttons.forEach(function (b, j) { b.setAttribute('aria-expanded', String(j === current && (state === 'opening' || state === 'open'))); });
     }
-
     function openDrawer(i) {
       current = i;
       fill(ELEMENTS[i]);
@@ -810,10 +893,11 @@
       if (!phone.matches) { goHome(); return; }
       var row = buttons.filter(function (b, j) { return ELEMENTS[j].group === ELEMENTS[i].group; });
       var pos = row.indexOf(buttons[i]);
-      var last = row[Math.min(pos - (pos % 2) + 1, row.length - 1)];
-      last.insertAdjacentElement('afterend', drawer);
+      row[Math.min(pos - (pos % 2) + 1, row.length - 1)].insertAdjacentElement('afterend', drawer);
     }
     onChange(phone, function () {
+      updateScrollers();
+      if (inLightbox()) sizeLightboxVideo();
       if (state !== 'open') return;   // the next open will use the right spot
       drawer.classList.add('no-anim');
       drawer.classList.remove('is-open');
@@ -823,7 +907,6 @@
       void drawer.offsetHeight;
       drawer.classList.remove('no-anim');
     });
-
     function reveal() {
       var r = drawer.getBoundingClientRect();
       var top = overview ? overview.getBoundingClientRect().bottom : 0;
@@ -831,72 +914,184 @@
       drawer.scrollIntoView({ block: r.height > window.innerHeight - top ? 'start' : 'nearest', behavior: reduce.matches ? 'instant' : 'smooth' });
     }
 
-    // ---------- Drawer content and the one shared video ----------
+    // ---------- Drawer content ----------
     function fill(el) {
       drawer.querySelector('.drawer-title').textContent = el.name;
       drawer.querySelector('.drawer-group').textContent = GROUP_NAMES[el.group];
       drawer.querySelector('.drawer-desc').textContent = el.text;
-      placeholder.querySelector('.drawer-ph-name').textContent = el.name;
+      buildTabs(el);
+      selectClip(0, false);
+    }
+    function buildTabs(el) {
+      tablist.textContent = '';
+      tabs = [];
+      if (el.clips.length < 2) {
+        tablist.hidden = true;
+        media.removeAttribute('role');
+        media.removeAttribute('aria-labelledby');
+        return;
+      }
+      tablist.hidden = false;
+      tablist.setAttribute('aria-label', 'Clips of ' + el.name);
+      media.setAttribute('role', 'tabpanel');
+      el.clips.forEach(function (clip, c) {
+        var t = make('button', 'clip-tab', clipLabel(clip, c));
+        t.type = 'button';
+        t.id = 'clip-tab-' + c;
+        t.setAttribute('role', 'tab');
+        t.setAttribute('aria-controls', inLightbox() ? stage.id : media.id);
+        t.addEventListener('click', function () { selectClip(c, true); });
+        tabs.push(t);
+        tablist.appendChild(t);
+      });
+    }
+    tablist.addEventListener('keydown', function (e) {
+      var i = tabs.indexOf(document.activeElement);
+      if (i < 0) return;
+      var n = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+      if (n === undefined) return;
+      e.preventDefault();
+      n = (n + tabs.length) % tabs.length;
+      selectClip(n, true);
+      tabs[n].focus();
+    });
+
+    // ---------- The one shared <video> ----------
+    function selectClip(c, playNow) {
+      var el = ELEMENTS[current], clip = el.clips[c];
+      currentClip = c;
+      tabs.forEach(function (t, j) { t.setAttribute('aria-selected', String(j === c)); t.tabIndex = j === c ? 0 : -1; });
+      if (tabs[c]) media.setAttribute('aria-labelledby', tabs[c].id);
+      var name = el.name + (el.clips.length > 1 ? ': ' + clipLabel(clip, c) : '');
+      placeholder.querySelector('.drawer-ph-name').textContent = name;
+      lightboxPh.querySelector('.lightbox-ph-name').textContent = name;
+      lightbox.setAttribute('aria-label', 'Enlarged video: ' + name);
+      var both = isNum(clip.start) && isNum(clip.end) && clip.end > clip.start;
+      segStart = both ? clip.start : null;
+      segEnd = both ? clip.end : null;
+      playNow = playNow && (state === 'open' || state === 'opening' || inLightbox());
+
+      if (clip.file === loadedFile) {                   // same file: no reload, just jump to the new start
+        if (video.readyState >= 1) video.currentTime = segStart !== null ? segStart : 0;
+        if (playNow && !reduce.matches) play();
+        return;
+      }
+      loadedFile = clip.file;
       media.classList.remove('is-ready', 'is-missing');
-      media.style.aspectRatio = '';               // back to 16:9 until the new video says its shape
-      enlarge.disabled = true;
+      lightbox.classList.remove('is-missing');
+      media.style.aspectRatio = '';                     // back to 16:9 until the new video says its shape
+      setShape(16 / 9);
+      enlarge.disabled = !inLightbox();
       video.pause();
       video.preload = 'none';
-      video.poster = MEDIA_FOLDER + el.file.replace(/\.mp4$/i, '.jpg');
-      triedFull = !(phone.matches && el.mobileFile);
-      video.src = MEDIA_FOLDER + (triedFull ? el.file : el.mobileFile);
+      triedFull = !(phone.matches && clip.mobileFile);
+      video.poster = MEDIA_FOLDER + clip.file.replace(/\.mp4$/i, '.jpg');
+      video.src = MEDIA_FOLDER + (triedFull ? clip.file : clip.mobileFile);
+      needsLoad = true;
+      if (playNow) startVideo();
     }
     function startVideo() {
-      video.controls = reduce.matches;             // reduced motion: poster and native controls, no autoplay
+      video.controls = reduce.matches || inLightbox();   // reduced motion: poster and native controls, no autoplay
       video.autoplay = !reduce.matches;
-      video.preload = reduce.matches ? 'metadata' : 'auto';
-      video.load();
-      if (!reduce.matches) { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
+      if (needsLoad) {
+        needsLoad = false;
+        video.preload = reduce.matches ? 'metadata' : 'auto';
+        video.load();
+      }
+      if (!reduce.matches) play();
     }
     video.addEventListener('loadedmetadata', function () {
-      if (video.videoWidth && video.videoHeight) media.style.aspectRatio = video.videoWidth + ' / ' + video.videoHeight;
+      if (video.videoWidth && video.videoHeight) {
+        media.style.aspectRatio = video.videoWidth + ' / ' + video.videoHeight;
+        setShape(video.videoWidth / video.videoHeight);
+      }
+      if (segStart !== null) video.currentTime = segStart;
+      if (inLightbox()) sizeLightboxVideo();
+    });
+    video.addEventListener('timeupdate', function () {
+      if (segEnd !== null && video.currentTime >= segEnd) video.currentTime = segStart;   // loop only the segment
     });
     video.addEventListener('loadeddata', function () { media.classList.add('is-ready'); enlarge.disabled = !lightbox.showModal; });
     video.addEventListener('error', function () {
       if (!video.getAttribute('src')) return;
-      if (!triedFull) {                            // the mobile copy failed: try the full video before giving up
+      if (!triedFull) {                                 // the mobile copy failed: try the full video before giving up
         triedFull = true;
-        video.src = MEDIA_FOLDER + ELEMENTS[current].file;
+        video.src = MEDIA_FOLDER + ELEMENTS[current].clips[currentClip].file;
+        needsLoad = true;
         startVideo();
         return;
       }
-      media.classList.add('is-missing');          // missing or broken file: show the grey placeholder
+      media.classList.add('is-missing');                // missing or broken file: show the grey placeholder
+      lightbox.classList.add('is-missing');
       enlarge.disabled = true;
     });
+
+    // ---------- Wide clips ----------
+    function setShape(r) {
+      ratio = r;
+      var wide = r > WIDE_RATIO;
+      media.style.setProperty('--ratio', r);
+      drawer.classList.toggle('is-wide', wide);
+      lightbox.classList.toggle('is-wide', wide);
+      updateScrollers();
+    }
+    function makeScroller(el, on, hint) {
+      if (on) { el.tabIndex = 0; el.setAttribute('role', 'region'); el.setAttribute('aria-label', 'Video, scrolls sideways'); el.setAttribute('aria-describedby', hint.id); }
+      else { el.removeAttribute('tabindex'); el.removeAttribute('role'); el.removeAttribute('aria-label'); el.removeAttribute('aria-describedby'); }
+    }
+    drawerHint.id = 'drawer-wide-hint';
+    lightboxHint.id = 'lightbox-wide-hint';
+    function updateScrollers() {
+      var scroll = ratio > WIDE_RATIO && phone.matches;
+      makeScroller(strip, scroll, drawerHint);
+      makeScroller(stage, scroll && inLightbox(), lightboxHint);
+    }
 
     function setEnlargeLabel() { enlarge.textContent = noHover.matches ? 'Tap to enlarge' : 'Click to enlarge'; }
     setEnlargeLabel();
     onChange(noHover, setEnlargeLabel);
 
-    // ---------- Lightbox: the same video moves into a full-screen dialog ----------
+    // ---------- Lightbox: the same video (and tabs) move into a full-screen dialog ----------
+    function sizeLightboxVideo() {
+      var hasTabs = !tablist.hidden;
+      var scroll = ratio > WIDE_RATIO && phone.matches;
+      stage.classList.toggle('is-scroll', scroll);
+      video.style.maxWidth = 'none';
+      video.style.maxHeight = 'none';
+      if (scroll) video.style.width = 'calc(' + (hasTabs ? 62 : 70) + 'vh * ' + ratio + ')';           // fills the height, scrolls sideways
+      else if (phone.matches) video.style.width = 'min(100vw, calc(' + (hasTabs ? 72 : 80) + 'vh * ' + ratio + '))';
+      else video.style.width = 'min(90vw, calc(' + (hasTabs ? 78 : 88) + 'vh * ' + ratio + '))';
+      updateScrollers();
+    }
     function openLightbox() {
       if (!media.classList.contains('is-ready') || !lightbox.showModal || lightbox.open) return;
       var time = video.currentTime;
-      lightbox.setAttribute('aria-label', 'Enlarged video: ' + ELEMENTS[current].name);
-      stage.appendChild(video);                    // one video only: the drawer copy is gone while this is open
+      stage.insertBefore(video, lightboxPh);           // one video only: the drawer copy is gone while this is open
+      lightboxHint.insertAdjacentElement('afterend', tablist);
+      tabs.forEach(function (t) { t.setAttribute('aria-controls', stage.id); });
       video.controls = true;
-      var ratio = (video.videoWidth && video.videoHeight) ? video.videoWidth / video.videoHeight : 16 / 9;
-      video.style.width = phone.matches ? 'min(100vw, calc(80vh * ' + ratio + '))' : 'min(90vw, calc(88vh * ' + ratio + '))';
       if (Math.abs(video.currentTime - time) > .05) video.currentTime = time;
       document.documentElement.classList.add('is-locked');
       lightbox.showModal();
+      sizeLightboxVideo();
+      stage.scrollLeft = 0;
       closeLightbox.focus();
-      if (!reduce.matches) { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
+      if (!reduce.matches) play();
     }
     lightbox.addEventListener('close', function () {
       var time = video.currentTime;
       media.insertBefore(video, placeholder);
-      video.style.width = '';
+      drawerHint.insertAdjacentElement('afterend', tablist);
+      tabs.forEach(function (t) { t.setAttribute('aria-controls', media.id); });
       if (Math.abs(video.currentTime - time) > .05) video.currentTime = time;
+      video.style.width = video.style.maxWidth = video.style.maxHeight = '';
+      stage.classList.remove('is-scroll');
       video.controls = reduce.matches;
       document.documentElement.classList.remove('is-locked');
-      if (state === 'open' && !reduce.matches) { var p = video.play(); if (p && p.catch) p.catch(function () {}); } else video.pause();
-      enlarge.focus({ preventScroll: true });
+      updateScrollers();
+      if (state === 'open' && !reduce.matches) play(); else video.pause();
+      if (enlarge.disabled) { var t = tabs[currentClip] || buttons[current]; t.focus({ preventScroll: true }); }
+      else enlarge.focus({ preventScroll: true });
     });
     enlarge.addEventListener('click', openLightbox);
     video.addEventListener('click', function () { if (video.parentNode === media && !video.controls) openLightbox(); });
