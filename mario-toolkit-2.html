@@ -123,6 +123,11 @@
     .drawer-title { font-family: var(--font-head); font-weight: 600; font-size: 1.5rem; margin: 0 0 .5rem; }
     .drawer-group { font-size: .82rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: #3b5a4a; margin: 0 0 .2rem; }
     .drawer-desc { margin: 0; }
+    .drawer-details[hidden] { display: none; }
+    .drawer-subhead { font-family: var(--font-body); font-size: .85rem; font-weight: 600; letter-spacing: .02em; line-height: 1.3; margin: 1.2rem 0 .35rem; color: #12281d; }
+    .drawer .drawer-list { margin: 0; padding-left: 1.3rem; line-height: 1.55; color: #12281d; }
+    .drawer .drawer-list li { margin: 0 0 .3rem; }
+    .drawer .drawer-list li:last-child { margin-bottom: 0; }
     .drawer-clipbox { grid-area: media; min-width: 0; }
     .drawer-strip { border-radius: .8rem; }
     .drawer-media { position: relative; aspect-ratio: 16 / 9; border-radius: .8rem; overflow: hidden; background: #d3dadd; }
@@ -428,7 +433,7 @@
           <div class="elements-fallback">
             <h4>Core Behaviors</h4>
             <ul>
-              <li><strong>Simple movement:</strong> Moves a platform back and forth along an axis.</li>
+              <li><strong>Simple movement:</strong> Moves any object back and forth along a straight line.</li>
               <li><strong>Simple rotation:</strong> Spins a platform around any axis.</li>
               <li><strong>Disappearing platform:</strong> Vanishes and returns, on a timer or when stepped on, including alternating patterns.</li>
               <li><strong>Bouncing platform:</strong> A trampoline bounce, or a balloon that launches the player in an arc.</li>
@@ -451,6 +456,7 @@
                   <p class="drawer-group"></p>
                   <h4 class="drawer-title" id="drawer-title"></h4>
                   <p class="drawer-desc"></p>
+                  <div class="drawer-details" hidden></div>
                 </div>
                 <div class="drawer-clipbox">
                   <div class="drawer-strip">
@@ -748,6 +754,8 @@
   /* ==========================================================
      THE EIGHT ELEMENTS: edit this list to change the buttons, the drawer and the videos.
      group: "core" (Core Behaviors) or "logic" (Level Logic Actors). Group settings are in GROUPS below.
+     details (optional): { steps: [...], options: [...] } shown under the description as
+            "How to use it" (a numbered list) and "What you can change" (a bulleted list).
      clips: one or more videos. With two or more, tabs appear under the video.
             (Not used in a shared group: those elements use the group's clips instead.)
        label      the clip button text (needed when an element has two or more clips).
@@ -759,7 +767,12 @@
   var MEDIA_FOLDER = 'images/museum/';
   var WIDE_RATIO = 2.4;               // clips wider than 2.4:1 count as "wide"
   var ELEMENTS = [
-    { group: 'core', name: 'Simple movement', text: 'Moves a platform back and forth along an axis.', clips: [
+    { group: 'core', name: 'Simple movement', text: 'Moves any object back and forth along a straight line.',
+      details: {
+        steps: ['Drag a mesh into your level and set it to Moveable.', 'Add the Simple Movement component.', 'Pick the axis: X, Y or Z.'],
+        options: ['Which direction it starts', 'How fast it moves', 'How long it pauses at each end']
+      },
+      clips: [
       { label: 'Simple movement', file: 'museum-simple-movement.mp4', mobileFile: 'museum-simple-movement-mobile.mp4' },
       { label: 'Combined with rotation', file: 'museum-movement-rotation-combined.mp4' }
     ] },
@@ -953,6 +966,17 @@
       head.querySelector('.drawer-group').textContent = GROUPS[el.group].name;
       head.querySelector('.drawer-title').textContent = el.name;
       head.querySelector('.drawer-desc').textContent = el.text;
+      var box = head.querySelector('.drawer-details'), d = el.details;
+      box.textContent = '';
+      box.hidden = !(d && ((d.steps && d.steps.length) || (d.options && d.options.length)));
+      if (box.hidden) return;
+      [['How to use it', 'ol', d.steps], ['What you can change', 'ul', d.options]].forEach(function (part) {
+        if (!part[2] || !part[2].length) return;
+        box.appendChild(make('h5', 'drawer-subhead', part[0]));
+        var list = make(part[1], 'drawer-list');
+        part[2].forEach(function (item) { list.appendChild(make('li', '', item)); });
+        box.appendChild(list);
+      });
     }
     // In a shared group the text can swap while the drawer is open: keep room for the tallest of them so nothing jumps
     function reserveHeight() {
