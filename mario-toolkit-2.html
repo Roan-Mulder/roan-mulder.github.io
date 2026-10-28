@@ -12,6 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script>document.documentElement.classList.add("js");</script>
   <style>
     /* ---------- Intro: title, hook, showcase and role box ---------- */
     .p2-hook { text-align: center; font-size: clamp(1.1rem, 2vw, 1.35rem); max-width: 44rem; margin: 1rem auto 0; padding: 0 var(--pad); }
@@ -70,6 +71,110 @@
     .todo { outline: 2px dashed var(--gold); outline-offset: 2px; border-radius: .25rem; padding: 0 .2em; background: rgba(232, 200, 96, .1); color: var(--cream); }
 
     .links-line { margin: 2rem 0 0; }
+
+    /* ---------- The eight elements: desk (buttons) and drawer (museum showcase) ---------- */
+    .elements { margin-top: 3rem; }
+    .elements-title { font-family: var(--font-head); font-size: clamp(1.8rem, 3.4vw, 2.4rem); font-weight: 600; margin-bottom: .5rem; }
+    .elements-title::after { content: ""; display: block; width: 3.5rem; height: .3rem; margin-top: .55rem; border-radius: 99px; background: var(--gold); }
+    .elements-intro { margin-bottom: 1.25rem; }
+    html:not(.js) .elements-intro { display: none; }
+    .js .elements-fallback { display: none; }
+    .elements-fallback h4 { font-family: var(--font-body); font-weight: 600; font-size: 1.05rem; margin: 1.5rem 0 .4rem; }
+
+    .desk { position: relative; z-index: 1; background: #e6eef1; color: #12281d; border-radius: 1.2rem; padding: 1.4rem 1.4rem 1.6rem; box-shadow: inset 0 0 0 1px rgba(18, 40, 29, .12); }
+    .desk-group + .desk-group { margin-top: 1.7rem; }
+    .desk-heading { font-family: var(--font-body); font-weight: 600; font-size: 1.05rem; letter-spacing: .01em; margin: 0 0 .55rem; }
+    .desk-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem; }
+
+    .el-btn {
+      display: grid; grid-template-columns: auto 1fr; grid-template-areas: "num chev" "name name"; align-items: center; gap: .45rem;
+      min-height: 5.6rem; padding: .75rem .85rem; text-align: left; font: inherit; font-size: .92rem; line-height: 1.3;
+      color: #12281d; background: #fff; border: 2px solid #5f7f6a; border-radius: .8rem; cursor: pointer;
+      box-shadow: 0 3px 0 #a9bcc4; transition: transform .12s, box-shadow .12s, background-color .15s, border-color .15s, color .15s;
+    }
+    .el-btn:hover { border-color: #12281d; }
+    .el-num { grid-area: num; display: inline-grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%; background: #dbe6ea; font-weight: 600; font-size: .85rem; }
+    .el-chev { grid-area: chev; justify-self: end; width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform .3s; }
+    .el-name { grid-area: name; font-weight: 600; }
+    /* Active: dark fill, a thicker dark border, pushed down ("pressed") and the chevron flipped */
+    .el-btn[aria-expanded="true"] {
+      background: var(--moss); color: var(--cream); border-color: #12281d;
+      box-shadow: inset 0 0 0 2px #12281d, inset 0 4px 8px rgba(0, 0, 0, .35); transform: translateY(3px);
+    }
+    .el-btn[aria-expanded="true"] .el-num { background: rgba(255, 243, 209, .2); }
+    .el-btn[aria-expanded="true"] .el-chev { transform: rotate(180deg); }
+    .el-btn:focus-visible { outline: 3px solid #12281d; outline-offset: 3px; }
+
+    /* Drawer: slides open with grid-template-rows (0fr to 1fr) */
+    .drawer {
+      display: grid; grid-template-rows: 0fr; visibility: hidden; margin: 0 1rem; scroll-margin: 5.5rem 0 1rem;
+      transition: grid-template-rows .33s cubic-bezier(.2, .7, .2, 1), visibility 0s linear .33s;
+    }
+    .drawer.is-open { grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows .33s cubic-bezier(.2, .7, .2, 1), visibility 0s; }
+    .drawer.no-anim, .drawer.no-anim .drawer-body { transition: none !important; }
+    .drawer-clip { position: relative; min-height: 0; overflow: hidden; background: #f4f8f9; color: #12281d; border-radius: 0 0 1rem 1rem; box-shadow: inset 0 14px 14px -12px rgba(18, 40, 29, .4), inset 0 0 0 1px rgba(18, 40, 29, .08); }
+    .drawer-body {
+      display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr); grid-template-areas: "head media" "head enlarge"; gap: .9rem 2rem; align-items: start;
+      padding: 1.5rem 1.6rem 2.4rem; opacity: 0; transform: translateY(-.8rem); transition: opacity .33s, transform .33s;
+    }
+    .drawer.is-open .drawer-body { opacity: 1; transform: none; }
+    .drawer-head { grid-area: head; }
+    .drawer-title { font-family: var(--font-head); font-weight: 600; font-size: 1.5rem; margin: 0 0 .15rem; }
+    .drawer-group { font-size: .82rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: #3b5a4a; margin: 0 0 .7rem; }
+    .drawer-desc { margin: 0; }
+    .drawer-media { grid-area: media; position: relative; aspect-ratio: 16 / 9; border-radius: .8rem; overflow: hidden; background: #d3dadd; }
+    .drawer-video { display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .2s; }
+    .drawer-media.is-ready .drawer-video { opacity: 1; cursor: zoom-in; }
+    .drawer-media.is-ready .drawer-video[controls] { cursor: auto; }
+    .drawer-ph { position: absolute; inset: 0; display: none; place-content: center; gap: .3rem; padding: 1rem; text-align: center; color: #26313a; }
+    .drawer-media.is-missing .drawer-ph { display: grid; }
+    .drawer-media.is-missing .drawer-video { display: none; }
+    .drawer-enlarge {
+      grid-area: enlarge; justify-self: start; min-height: 44px; padding: .55rem 1.3rem; font: inherit; font-size: .92rem;
+      color: var(--cream); background: var(--moss); border: 2px solid #12281d; border-radius: 999px; cursor: pointer;
+    }
+    .drawer-enlarge:hover { background: #12281d; }
+    .drawer-enlarge:disabled { color: #44544c; background: #e1e8ea; border-color: #93a69e; cursor: not-allowed; }
+    .drawer-enlarge:focus-visible { outline: 3px solid #12281d; outline-offset: 3px; }
+    .drawer-handle { position: absolute; left: 50%; bottom: .75rem; width: 3.5rem; height: .35rem; margin-left: -1.75rem; border-radius: 99px; background: #8ea3ab; }
+
+    /* Lightbox */
+    html.is-locked, html.is-locked body { overflow: hidden; }
+    .lightbox { width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; color: #fff; overflow: hidden; }
+    .lightbox[open] { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .8rem; }
+    .lightbox::backdrop { background: rgba(0, 0, 0, .85); }
+    .lightbox-stage { display: flex; align-items: center; justify-content: center; width: 100%; }
+    /* The script sets the width from the video's own shape: at most 90vw by 88vh (full width on phones) */
+    .lightbox-stage video { display: block; width: 90vw; height: auto; max-width: 90vw; max-height: 88vh; object-fit: contain; background: transparent; opacity: 1; cursor: auto; }
+    .lightbox-close {
+      position: fixed; z-index: 2; top: max(1rem, env(safe-area-inset-top)); right: max(1rem, env(safe-area-inset-right));
+      display: grid; place-items: center; width: 56px; height: 56px; padding: 0; border: 0; border-radius: 50%;
+      background: #fff; color: #111; cursor: pointer; box-shadow: 0 2px 12px rgba(0, 0, 0, .6);
+    }
+    .lightbox-close svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }
+    .lightbox-close:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+    .lightbox-hint { display: none; margin: 0; padding: 0 1rem; font-size: .9rem; color: #fff; text-align: center; }
+
+    @media (max-width: 640px) {
+      .desk { padding: 1.1rem 1rem 1.3rem; }
+      .desk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .desk-grid > .el-btn:last-of-type:nth-of-type(odd) { grid-column: 1 / -1; }
+      .el-btn { min-height: 4.8rem; }
+      /* On phones the drawer sits inside the grid, right under the row of the button that opened it */
+      .desk-grid > .drawer { grid-column: 1 / -1; margin: calc(-.75rem + 4px) .35rem 0; }
+      .drawer { margin: 0 .6rem; }
+      .drawer-body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "media" "enlarge"; padding: 1.2rem 1.1rem 2.2rem; }
+      .drawer-title { font-size: 1.3rem; }
+      .lightbox-stage video { max-width: 100vw; max-height: 80vh; }
+      .lightbox-close { width: 48px; height: 48px; }
+      .lightbox-close svg { width: 22px; height: 22px; }
+    }
+    @media (max-width: 640px) and (orientation: portrait) {
+      .lightbox-hint { display: block; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .drawer, .drawer.is-open, .drawer-body, .el-btn, .el-chev, .drawer-video { transition: none !important; }
+    }
 
     @media (max-width: 860px) {
       .p2-intro, .weave { grid-template-columns: 1fr; gap: 1.5rem; }
@@ -268,26 +373,49 @@
           </div>
         </div>
 
-        <div class="weave weave--flip">
-          <div class="weave-text">
-            <p><strong>The eight elements:</strong></p>
+        <!-- ===== The eight elements: a "desk" of buttons and a "drawer" with the museum showcase =====
+             The buttons and the drawer are built by the script at the bottom of this page, from the ELEMENTS list.
+             The two lists below are only shown when JavaScript is off: keep them in sync with that list. -->
+        <div class="elements" id="elements">
+          <h3 class="elements-title" id="elements-title">The Eight Elements:</h3>
+          <p class="elements-intro">Select an element to open its museum showcase.</p>
+
+          <div class="elements-fallback">
+            <h4>Core Behaviors</h4>
             <ul>
-              <li><strong>Simple movement:</strong> moves a platform along an axis.</li>
-              <li><strong>Simple rotation:</strong> spins a platform around any axis.</li>
-              <li><strong>Disappearing platform:</strong> vanishes and returns on a timer or when stepped on, including alternating patterns.</li>
-              <li><strong>Bouncing platform:</strong> a trampoline-style bounce, or a balloon that launches the player in an arc and can be chained.</li>
-              <li><strong>Spline moving platform:</strong> follows a drawn path and can pause or rotate at points along it.</li>
-              <li><strong>Void actor:</strong> restarts the level when the player falls.</li>
-              <li><strong>End collectable:</strong> completes the level.</li>
-              <li><strong>Regular collectable:</strong> coins that can be required to unlock the end collectable.</li>
+              <li><strong>Simple movement:</strong> Moves a platform back and forth along an axis.</li>
+              <li><strong>Simple rotation:</strong> Spins a platform around any axis.</li>
+              <li><strong>Disappearing platform:</strong> Vanishes and returns, on a timer or when stepped on, including alternating patterns.</li>
+              <li><strong>Bouncing platform:</strong> A trampoline bounce, or a balloon that launches the player in an arc.</li>
+              <li><strong>Spline moving platform:</strong> Follows a drawn path and can pause or rotate at points along it.</li>
+            </ul>
+            <h4>Level Logic Actors</h4>
+            <ul>
+              <li><strong>Void actor:</strong> Restarts the level when the player falls.</li>
+              <li><strong>End collectable:</strong> Completes the level.</li>
+              <li><strong>Regular collectable:</strong> Coins that can be required to unlock the end collectable.</li>
             </ul>
           </div>
-          <div class="weave-media">
-            <figure class="slot" data-slot="eight-elements" data-alt="Grid of eight clips, one for each toolkit element, shown on its own in the museum level">
-              <div class="slot-box" role="img" aria-label="Placeholder: grid of the eight elements, from the museum level or How-To GIFs">Image slot: grid of the eight elements, from the museum level or How-To GIFs</div>
-              <figcaption>The eight elements, each shown in the museum level so a new user can see what one piece does on its own.</figcaption>
-            </figure>
-          </div>
+
+          <div class="desk" id="el-desk" hidden></div>
+
+          <section class="drawer" id="el-drawer" aria-labelledby="drawer-title" hidden>
+            <div class="drawer-clip">
+              <div class="drawer-body">
+                <div class="drawer-head">
+                  <h4 class="drawer-title" id="drawer-title"></h4>
+                  <p class="drawer-group"></p>
+                  <p class="drawer-desc"></p>
+                </div>
+                <div class="drawer-media">
+                  <video class="drawer-video" muted loop playsinline preload="none"></video>
+                  <div class="drawer-ph"><strong class="drawer-ph-name"></strong><span>Showcase video coming soon</span></div>
+                </div>
+                <button type="button" class="drawer-enlarge" disabled>Click to enlarge</button>
+              </div>
+              <span class="drawer-handle" aria-hidden="true"></span>
+            </div>
+          </section>
         </div>
       </section>
 
@@ -518,6 +646,13 @@
     </div>
   </div>
 </main>
+<dialog class="lightbox" id="el-lightbox" aria-label="Enlarged showcase video">
+  <button type="button" class="lightbox-close" aria-label="Close enlarged video">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <div class="lightbox-stage"></div>
+  <p class="lightbox-hint">Rotate your phone for a bigger view.</p>
+</dialog>
 <footer class="site-footer">
   <div class="footer-inner" style="justify-content: center">
     <ul class="footer-links">
@@ -550,6 +685,209 @@
     window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
     window.addEventListener('resize', update);
     update();
+  })();
+</script>
+<script>
+  /* ==========================================================
+     THE EIGHT ELEMENTS: edit this list to change the buttons and the drawer.
+     group: "core" (Core Behaviors) or "logic" (Level Logic Actors).
+     file:  the museum video inside MEDIA_FOLDER. The poster image has the same name, ending in .jpg.
+     If you change a name or description, also update the no-JavaScript lists in Part 1.
+     ========================================================== */
+  var MEDIA_FOLDER = 'images/museum/';
+  var ELEMENTS = [
+    { group: 'core',  name: 'Simple movement',        text: 'Moves a platform back and forth along an axis.', file: 'museum-simple-movement.mp4' },
+    { group: 'core',  name: 'Simple rotation',        text: 'Spins a platform around any axis.', file: 'museum-simple-rotation.mp4' },
+    { group: 'core',  name: 'Disappearing platform',  text: 'Vanishes and returns, on a timer or when stepped on, including alternating patterns.', file: 'museum-disappearing-platform.mp4' },
+    { group: 'core',  name: 'Bouncing platform',      text: 'A trampoline bounce, or a balloon that launches the player in an arc.', file: 'museum-bouncing-platform.mp4' },
+    { group: 'core',  name: 'Spline moving platform', text: 'Follows a drawn path and can pause or rotate at points along it.', file: 'museum-spline-platform.mp4' },
+    { group: 'logic', name: 'Void actor',             text: 'Restarts the level when the player falls.', file: 'museum-void-actor.mp4' },
+    { group: 'logic', name: 'End collectable',        text: 'Completes the level.', file: 'museum-end-collectable.mp4' },
+    { group: 'logic', name: 'Regular collectable',    text: 'Coins that can be required to unlock the end collectable.', file: 'museum-regular-collectable.mp4' }
+  ];
+  var GROUP_NAMES = { core: 'Core Behaviors', logic: 'Level Logic Actors' };
+
+  (function () {
+    var desk = document.getElementById('el-desk');
+    var drawer = document.getElementById('el-drawer');
+    var lightbox = document.getElementById('el-lightbox');
+    if (!desk || !drawer) return;
+
+    var media = drawer.querySelector('.drawer-media');
+    var video = drawer.querySelector('.drawer-video');
+    var placeholder = drawer.querySelector('.drawer-ph');
+    var enlarge = drawer.querySelector('.drawer-enlarge');
+    var stage = lightbox.querySelector('.lightbox-stage');
+    var closeLightbox = lightbox.querySelector('.lightbox-close');
+    var overview = document.querySelector('.overview');
+
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var phone = window.matchMedia('(max-width: 640px)');
+    var noHover = window.matchMedia('(hover: none)');
+    var DURATION = 340;               // ms, matches the CSS transition
+    var buttons = [];
+    var state = 'closed';             // closed, opening, open, closing
+    var current = -1;                 // index of the element in the drawer
+    var pending = null;               // latest click made during an animation
+    var timer = null;
+
+    function onChange(mq, fn) { if (mq.addEventListener) mq.addEventListener('change', fn); else mq.addListener(fn); }
+    function make(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+
+    // ---------- Build the desk from ELEMENTS ----------
+    ['core', 'logic'].forEach(function (group) {
+      var box = make('div', 'desk-group');
+      var heading = make('h4', 'desk-heading', GROUP_NAMES[group]);
+      heading.id = 'desk-heading-' + group;
+      box.setAttribute('role', 'group');
+      box.setAttribute('aria-labelledby', heading.id);
+      var grid = make('div', 'desk-grid');
+      ELEMENTS.forEach(function (el, i) {
+        if (el.group !== group) return;
+        var b = make('button', 'el-btn');
+        b.type = 'button';
+        b.id = 'el-btn-' + (i + 1);
+        b.setAttribute('aria-expanded', 'false');
+        b.setAttribute('aria-controls', 'el-drawer');
+        b.appendChild(make('span', 'el-num', String(i + 1)));
+        b.insertAdjacentHTML('beforeend', '<svg class="el-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>');
+        b.appendChild(make('span', 'el-name', el.name));
+        b.addEventListener('click', function () { request(i); });
+        buttons[i] = b;
+        grid.appendChild(b);
+      });
+      box.appendChild(heading);
+      box.appendChild(grid);
+      desk.appendChild(box);
+    });
+    desk.hidden = false;
+    drawer.hidden = false;
+
+    // ---------- Click logic ----------
+    function request(i) {
+      if (state === 'opening' || state === 'closing') { pending = i; return; }   // remember only the latest click
+      if (state === 'closed') openDrawer(i);
+      else if (i === current) closeDrawer();
+      else { pending = i; closeDrawer(); }                                     // close, swap, then open the new one
+    }
+    function afterAnimation(fn) { clearTimeout(timer); timer = setTimeout(fn, reduce.matches ? 0 : DURATION + 30); }
+    function runPending() { if (pending === null) return; var next = pending; pending = null; request(next); }
+    function setExpanded() {
+      buttons.forEach(function (b, j) { b.setAttribute('aria-expanded', String(j === current && (state === 'opening' || state === 'open'))); });
+    }
+
+    function openDrawer(i) {
+      current = i;
+      fill(ELEMENTS[i]);
+      place(i);                       // moved while still closed
+      state = 'opening';
+      setExpanded();
+      void drawer.offsetHeight;       // start the slide from the closed size
+      drawer.classList.add('is-open');
+      startVideo();
+      afterAnimation(function () { state = 'open'; reveal(); runPending(); });
+    }
+    function closeDrawer() {
+      var opener = buttons[current];
+      state = 'closing';
+      setExpanded();
+      drawer.classList.remove('is-open');
+      video.pause();
+      afterAnimation(function () {
+        state = 'closed';
+        goHome();
+        if (pending === null && opener) opener.focus({ preventScroll: true });
+        runPending();
+      });
+    }
+
+    // Desktop: the drawer sits under the whole desk. Phones: under the row of the clicked button.
+    function goHome() { if (drawer.previousElementSibling !== desk) desk.insertAdjacentElement('afterend', drawer); }
+    function place(i) {
+      if (!phone.matches) { goHome(); return; }
+      var row = buttons.filter(function (b, j) { return ELEMENTS[j].group === ELEMENTS[i].group; });
+      var pos = row.indexOf(buttons[i]);
+      var last = row[Math.min(pos - (pos % 2) + 1, row.length - 1)];
+      last.insertAdjacentElement('afterend', drawer);
+    }
+    onChange(phone, function () {
+      if (state !== 'open') return;   // the next open will use the right spot
+      drawer.classList.add('no-anim');
+      drawer.classList.remove('is-open');
+      place(current);
+      void drawer.offsetHeight;
+      drawer.classList.add('is-open');
+      void drawer.offsetHeight;
+      drawer.classList.remove('no-anim');
+    });
+
+    function reveal() {
+      var r = drawer.getBoundingClientRect();
+      var top = overview ? overview.getBoundingClientRect().bottom : 0;
+      if (r.top >= top && r.bottom <= window.innerHeight) return;
+      drawer.scrollIntoView({ block: r.height > window.innerHeight - top ? 'start' : 'nearest', behavior: reduce.matches ? 'instant' : 'smooth' });
+    }
+
+    // ---------- Drawer content and the one shared video ----------
+    function fill(el) {
+      drawer.querySelector('.drawer-title').textContent = el.name;
+      drawer.querySelector('.drawer-group').textContent = GROUP_NAMES[el.group];
+      drawer.querySelector('.drawer-desc').textContent = el.text;
+      placeholder.querySelector('.drawer-ph-name').textContent = el.name;
+      media.classList.remove('is-ready', 'is-missing');
+      enlarge.disabled = true;
+      video.pause();
+      video.preload = 'none';
+      video.poster = MEDIA_FOLDER + el.file.replace(/\.mp4$/i, '.jpg');
+      video.src = MEDIA_FOLDER + el.file;
+    }
+    function startVideo() {
+      video.controls = reduce.matches;             // reduced motion: poster and native controls, no autoplay
+      video.autoplay = !reduce.matches;
+      video.preload = reduce.matches ? 'metadata' : 'auto';
+      video.load();
+      if (!reduce.matches) { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
+    }
+    video.addEventListener('loadeddata', function () { media.classList.add('is-ready'); enlarge.disabled = !lightbox.showModal; });
+    video.addEventListener('error', function () {
+      if (!video.getAttribute('src')) return;
+      media.classList.add('is-missing');          // missing or broken file: show the grey placeholder
+      enlarge.disabled = true;
+    });
+
+    function setEnlargeLabel() { enlarge.textContent = noHover.matches ? 'Tap to enlarge' : 'Click to enlarge'; }
+    setEnlargeLabel();
+    onChange(noHover, setEnlargeLabel);
+
+    // ---------- Lightbox: the same video moves into a full-screen dialog ----------
+    function openLightbox() {
+      if (!media.classList.contains('is-ready') || !lightbox.showModal || lightbox.open) return;
+      var time = video.currentTime;
+      lightbox.setAttribute('aria-label', 'Enlarged video: ' + ELEMENTS[current].name);
+      stage.appendChild(video);                    // one video only: the drawer copy is gone while this is open
+      video.controls = true;
+      var ratio = (video.videoWidth && video.videoHeight) ? video.videoWidth / video.videoHeight : 16 / 9;
+      video.style.width = phone.matches ? 'min(100vw, calc(80vh * ' + ratio + '))' : 'min(90vw, calc(88vh * ' + ratio + '))';
+      if (Math.abs(video.currentTime - time) > .05) video.currentTime = time;
+      document.documentElement.classList.add('is-locked');
+      lightbox.showModal();
+      closeLightbox.focus();
+      if (!reduce.matches) { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
+    }
+    lightbox.addEventListener('close', function () {
+      var time = video.currentTime;
+      media.insertBefore(video, placeholder);
+      video.style.width = '';
+      if (Math.abs(video.currentTime - time) > .05) video.currentTime = time;
+      video.controls = reduce.matches;
+      document.documentElement.classList.remove('is-locked');
+      if (state === 'open' && !reduce.matches) { var p = video.play(); if (p && p.catch) p.catch(function () {}); } else video.pause();
+      enlarge.focus({ preventScroll: true });
+    });
+    enlarge.addEventListener('click', openLightbox);
+    video.addEventListener('click', function () { if (video.parentNode === media && !video.controls) openLightbox(); });
+    closeLightbox.addEventListener('click', function () { lightbox.close(); });
+    lightbox.addEventListener('click', function (e) { if (e.target === lightbox || e.target === stage) lightbox.close(); });
   })();
 </script>
 <!-- Preview card text for the portfolio grid (move later):
