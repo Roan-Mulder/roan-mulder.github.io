@@ -169,6 +169,15 @@
     .clip-tab[aria-selected="true"] { color: var(--cream); background: var(--moss); border-color: #12281d; font-weight: 600; box-shadow: inset 0 0 0 1px #12281d; }
     .clip-tab:focus-visible { outline: 3px solid #12281d; outline-offset: 2px; }
 
+    /* Shared group (Level Logic Actors): every description under the video, the clicked one marked */
+    .drawer .shared-list { list-style: none; margin: .8rem 0 0; padding: 0; display: grid; gap: .45rem; }
+    .drawer .shared-item { margin: 0; }
+    .shared-list[hidden] { display: none; }
+    .shared-item { position: relative; padding: .6rem .9rem; border: 2px solid rgba(18, 40, 29, .18); border-radius: .7rem; background: transparent; font-size: .95rem; }
+    .shared-item.is-selected { border: 3px solid #12281d; padding: calc(.6rem - 1px) calc(.9rem - 1px); background: #fff; box-shadow: 0 2px 0 rgba(18, 40, 29, .25); }
+    .shared-badge { display: none; margin-left: .5rem; padding: .05rem .55rem; border-radius: 999px; background: var(--moss); color: var(--cream); font-size: .75rem; font-weight: 600; letter-spacing: .03em; vertical-align: .1em; }
+    .shared-item.is-selected .shared-badge { display: inline-block; }
+
     /* Wide clips (wider than 2.4:1) */
     .wide-hint { display: none; margin: .45rem 0 0; font-size: .85rem; color: #3b5a4a; }
     .drawer.is-wide .drawer-body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "media" "enlarge"; }
@@ -452,6 +461,7 @@
                   </div>
                   <p class="wide-hint">Swipe sideways to see the whole clip</p>
                   <div class="clip-tabs" role="tablist" hidden></div>
+                  <ul class="shared-list" hidden></ul>
                 </div>
                 <button type="button" class="drawer-enlarge" disabled>Click to enlarge</button>
               </div>
@@ -735,8 +745,9 @@
 <script>
   /* ==========================================================
      THE EIGHT ELEMENTS: edit this list to change the buttons, the drawer and the videos.
-     group: "core" (Core Behaviors) or "logic" (Level Logic Actors).
+     group: "core" (Core Behaviors) or "logic" (Level Logic Actors). Group settings are in GROUPS below.
      clips: one or more videos. With two or more, tabs appear under the video.
+            (Not used in a shared group: those elements use the group's clips instead.)
        label      (optional) the tab text. The first clip is called "Showcase" unless it has a label.
        file       the video inside MEDIA_FOLDER. The poster image has the same name, ending in .jpg.
        mobileFile (optional) a smaller copy of the same video, used on phones (640px wide and narrower).
@@ -764,18 +775,17 @@
     { group: 'core', name: 'Spline moving platform', text: 'Follows a drawn path and can pause or rotate at points along it.', clips: [
       { file: 'museum-spline-platform.mp4' }
     ] },
-    // The three Level Logic Actors share one video. Fill in start and end (in seconds) to loop each one's part.
-    { group: 'logic', name: 'Void actor', text: 'Restarts the level when the player falls.', clips: [
-      { file: 'museum-level-logic-actors.mp4', start: null, end: null }
-    ] },
-    { group: 'logic', name: 'End collectable', text: 'Completes the level.', clips: [
-      { file: 'museum-level-logic-actors.mp4', start: null, end: null }
-    ] },
-    { group: 'logic', name: 'Regular collectable', text: 'Coins that can be required to unlock the end collectable.', clips: [
-      { file: 'museum-level-logic-actors.mp4', start: null, end: null }
-    ] }
+    { group: 'logic', name: 'Void actor',          text: 'Restarts the level when the player falls.' },
+    { group: 'logic', name: 'End collectable',     text: 'Completes the level.' },
+    { group: 'logic', name: 'Regular collectable', text: 'Coins that can be required to unlock the end collectable.' }
   ];
-  var GROUP_NAMES = { core: 'Core Behaviors', logic: 'Level Logic Actors' };
+  var GROUPS = {
+    core:  { name: 'Core Behaviors' },
+    // shared: the three Level Logic Actors open one drawer together, with one video that shows all three in sync
+    logic: { name: 'Level Logic Actors', shared: true, clips: [
+      { file: 'museum-level-logic-actors.mp4' }
+    ] }
+  };
 
   (function () {
     var desk = document.getElementById('el-desk');
@@ -790,6 +800,7 @@
     var placeholder = drawer.querySelector('.drawer-ph');
     var drawerHint = clipbox.querySelector('.wide-hint');
     var tablist = drawer.querySelector('.clip-tabs');
+    var sharedList = drawer.querySelector('.shared-list');
     var enlarge = drawer.querySelector('.drawer-enlarge');
     var stage = lightbox.querySelector('.lightbox-stage');
     var lightboxPh = lightbox.querySelector('.lightbox-ph');
@@ -820,11 +831,14 @@
     function play() { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
     function clipLabel(clip, c) { return clip.label || (c === 0 ? 'Showcase' : 'Clip ' + (c + 1)); }
     function inLightbox() { return lightbox.open; }
+    function shared(i) { return !!GROUPS[ELEMENTS[i].group].shared; }
+    function clipsOf(i) { return shared(i) ? GROUPS[ELEMENTS[i].group].clips : ELEMENTS[i].clips; }
+    function titleOf(i) { return shared(i) ? GROUPS[ELEMENTS[i].group].name : ELEMENTS[i].name; }
 
     // ---------- Build the desk from ELEMENTS ----------
     ['core', 'logic'].forEach(function (group) {
       var box = make('div', 'desk-group');
-      var heading = make('h4', 'desk-heading', GROUP_NAMES[group]);
+      var heading = make('h4', 'desk-heading', GROUPS[group].name);
       heading.id = 'desk-heading-' + group;
       box.setAttribute('role', 'group');
       box.setAttribute('aria-labelledby', heading.id);
@@ -853,6 +867,12 @@
     // ---------- Click logic ----------
     function request(i) {
       if (state === 'opening' || state === 'closing') { pending = i; return; }   // remember only the latest click
+      if (state === 'open' && i !== current && shared(i) && ELEMENTS[i].group === ELEMENTS[current].group) {
+        current = i;                  // same shared group: keep the drawer open and the video playing, just move the highlight
+        setExpanded();
+        highlightShared();
+        return;
+      }
       if (state === 'closed') openDrawer(i);
       else if (i === current) closeDrawer();
       else { pending = i; closeDrawer(); }                                     // close, swap, then open the new one
@@ -864,7 +884,7 @@
     }
     function openDrawer(i) {
       current = i;
-      fill(ELEMENTS[i]);
+      fill(i);
       place(i);                       // moved while still closed
       state = 'opening';
       setExpanded();
@@ -915,26 +935,55 @@
     }
 
     // ---------- Drawer content ----------
-    function fill(el) {
-      drawer.querySelector('.drawer-title').textContent = el.name;
-      drawer.querySelector('.drawer-group').textContent = GROUP_NAMES[el.group];
-      drawer.querySelector('.drawer-desc').textContent = el.text;
-      buildTabs(el);
+    function fill(i) {
+      var el = ELEMENTS[i], isShared = shared(i);
+      var groupLine = drawer.querySelector('.drawer-group'), desc = drawer.querySelector('.drawer-desc');
+      drawer.querySelector('.drawer-title').textContent = titleOf(i);
+      groupLine.textContent = GROUPS[el.group].name;
+      groupLine.hidden = isShared;                  // the title already is the group name
+      desc.textContent = el.text;
+      desc.hidden = isShared;                       // a shared group lists every description under the video instead
+      buildSharedList(i);
+      buildTabs(clipsOf(i), titleOf(i));
       selectClip(0, false);
     }
-    function buildTabs(el) {
+    // Shared group: every element's name and description, with the clicked one marked "Selected"
+    function buildSharedList(i) {
+      sharedList.textContent = '';
+      sharedList.hidden = !shared(i);
+      if (!shared(i)) return;
+      sharedList.setAttribute('aria-label', 'About each ' + GROUPS[ELEMENTS[i].group].name.toLowerCase().replace(/s$/, ''));
+      ELEMENTS.forEach(function (el, j) {
+        if (el.group !== ELEMENTS[i].group) return;
+        var li = make('li', 'shared-item');
+        li.dataset.index = j;
+        li.appendChild(make('strong', 'shared-name', el.name));
+        li.appendChild(document.createTextNode(' ' + el.text));
+        li.appendChild(make('span', 'shared-badge', 'Selected'));
+        sharedList.appendChild(li);
+      });
+      highlightShared();
+    }
+    function highlightShared() {
+      [].forEach.call(sharedList.children, function (li) {
+        var on = +li.dataset.index === current;
+        li.classList.toggle('is-selected', on);
+        if (on) li.setAttribute('aria-current', 'true'); else li.removeAttribute('aria-current');
+      });
+    }
+    function buildTabs(clips, title) {
       tablist.textContent = '';
       tabs = [];
-      if (el.clips.length < 2) {
+      if (clips.length < 2) {
         tablist.hidden = true;
         media.removeAttribute('role');
         media.removeAttribute('aria-labelledby');
         return;
       }
       tablist.hidden = false;
-      tablist.setAttribute('aria-label', 'Clips of ' + el.name);
+      tablist.setAttribute('aria-label', 'Clips of ' + title);
       media.setAttribute('role', 'tabpanel');
-      el.clips.forEach(function (clip, c) {
+      clips.forEach(function (clip, c) {
         var t = make('button', 'clip-tab', clipLabel(clip, c));
         t.type = 'button';
         t.id = 'clip-tab-' + c;
@@ -958,11 +1007,11 @@
 
     // ---------- The one shared <video> ----------
     function selectClip(c, playNow) {
-      var el = ELEMENTS[current], clip = el.clips[c];
+      var clips = clipsOf(current), clip = clips[c];
       currentClip = c;
       tabs.forEach(function (t, j) { t.setAttribute('aria-selected', String(j === c)); t.tabIndex = j === c ? 0 : -1; });
       if (tabs[c]) media.setAttribute('aria-labelledby', tabs[c].id);
-      var name = el.name + (el.clips.length > 1 ? ': ' + clipLabel(clip, c) : '');
+      var name = titleOf(current) + (clips.length > 1 ? ': ' + clipLabel(clip, c) : '');
       placeholder.querySelector('.drawer-ph-name').textContent = name;
       lightboxPh.querySelector('.lightbox-ph-name').textContent = name;
       lightbox.setAttribute('aria-label', 'Enlarged video: ' + name);
@@ -1016,7 +1065,7 @@
       if (!video.getAttribute('src')) return;
       if (!triedFull) {                                 // the mobile copy failed: try the full video before giving up
         triedFull = true;
-        video.src = MEDIA_FOLDER + ELEMENTS[current].clips[currentClip].file;
+        video.src = MEDIA_FOLDER + clipsOf(current)[currentClip].file;
         needsLoad = true;
         startVideo();
         return;
