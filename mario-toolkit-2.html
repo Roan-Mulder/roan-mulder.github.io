@@ -118,9 +118,10 @@
       padding: 1.5rem 1.6rem 2.4rem; opacity: 0; transform: translateY(-.8rem); transition: opacity .33s, transform .33s;
     }
     .drawer.is-open .drawer-body { opacity: 1; transform: none; }
-    .drawer-head { grid-area: head; }
-    .drawer-title { font-family: var(--font-head); font-weight: 600; font-size: 1.5rem; margin: 0 0 .15rem; }
-    .drawer-group { font-size: .82rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: #3b5a4a; margin: 0 0 .7rem; }
+    .drawer-head { grid-area: head; transition: opacity 75ms ease; }
+    .drawer-head.is-swapping { opacity: 0; }
+    .drawer-title { font-family: var(--font-head); font-weight: 600; font-size: 1.5rem; margin: 0 0 .5rem; }
+    .drawer-group { font-size: .82rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: #3b5a4a; margin: 0 0 .2rem; }
     .drawer-desc { margin: 0; }
     .drawer-clipbox { grid-area: media; min-width: 0; }
     .drawer-strip { border-radius: .8rem; }
@@ -169,15 +170,6 @@
     .clip-tab[aria-selected="true"] { color: var(--cream); background: var(--moss); border-color: #12281d; font-weight: 600; box-shadow: inset 0 0 0 1px #12281d; }
     .clip-tab:focus-visible { outline: 3px solid #12281d; outline-offset: 2px; }
 
-    /* Shared group (Level Logic Actors): every description under the video, the clicked one marked */
-    .drawer .shared-list { list-style: none; margin: .8rem 0 0; padding: 0; display: grid; gap: .45rem; }
-    .drawer .shared-item { margin: 0; }
-    .shared-list[hidden] { display: none; }
-    .shared-item { position: relative; padding: .6rem .9rem; border: 2px solid rgba(18, 40, 29, .18); border-radius: .7rem; background: transparent; font-size: .95rem; }
-    .shared-item.is-selected { border: 3px solid #12281d; padding: calc(.6rem - 1px) calc(.9rem - 1px); background: #fff; box-shadow: 0 2px 0 rgba(18, 40, 29, .25); }
-    .shared-badge { display: none; margin-left: .5rem; padding: .05rem .55rem; border-radius: 999px; background: var(--moss); color: var(--cream); font-size: .75rem; font-weight: 600; letter-spacing: .03em; vertical-align: .1em; }
-    .shared-item.is-selected .shared-badge { display: inline-block; }
-
     /* Wide clips (wider than 2.4:1) */
     .wide-hint { display: none; margin: .45rem 0 0; font-size: .85rem; color: #3b5a4a; }
     .drawer.is-wide .drawer-body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "media" "enlarge"; }
@@ -218,7 +210,7 @@
       .lightbox-hint { display: block; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .drawer, .drawer.is-open, .drawer-body, .el-btn, .el-chev, .drawer-video { transition: none !important; }
+      .drawer, .drawer.is-open, .drawer-body, .drawer-head, .el-btn, .el-chev, .drawer-video { transition: none !important; }
     }
 
     @media (max-width: 860px) {
@@ -447,9 +439,9 @@
           <section class="drawer" id="el-drawer" aria-labelledby="drawer-title" hidden>
             <div class="drawer-clip">
               <div class="drawer-body">
-                <div class="drawer-head">
-                  <h4 class="drawer-title" id="drawer-title"></h4>
+                <div class="drawer-head" aria-live="polite">
                   <p class="drawer-group"></p>
+                  <h4 class="drawer-title" id="drawer-title"></h4>
                   <p class="drawer-desc"></p>
                 </div>
                 <div class="drawer-clipbox">
@@ -461,7 +453,6 @@
                   </div>
                   <p class="wide-hint">Swipe sideways to see the whole clip</p>
                   <div class="clip-tabs" role="tablist" hidden></div>
-                  <ul class="shared-list" hidden></ul>
                 </div>
                 <button type="button" class="drawer-enlarge" disabled>Click to enlarge</button>
               </div>
@@ -781,7 +772,8 @@
   ];
   var GROUPS = {
     core:  { name: 'Core Behaviors' },
-    // shared: the three Level Logic Actors open one drawer together, with one video that shows all three in sync
+    // shared: the three Level Logic Actors use one video that shows all three in sync.
+    // Switching between them while the drawer is open only swaps the text; the video keeps playing.
     logic: { name: 'Level Logic Actors', shared: true, clips: [
       { file: 'museum-level-logic-actors.mp4' }
     ] }
@@ -800,7 +792,7 @@
     var placeholder = drawer.querySelector('.drawer-ph');
     var drawerHint = clipbox.querySelector('.wide-hint');
     var tablist = drawer.querySelector('.clip-tabs');
-    var sharedList = drawer.querySelector('.shared-list');
+    var head = drawer.querySelector('.drawer-head');
     var enlarge = drawer.querySelector('.drawer-enlarge');
     var stage = lightbox.querySelector('.lightbox-stage');
     var lightboxPh = lightbox.querySelector('.lightbox-ph');
@@ -868,9 +860,9 @@
     function request(i) {
       if (state === 'opening' || state === 'closing') { pending = i; return; }   // remember only the latest click
       if (state === 'open' && i !== current && shared(i) && ELEMENTS[i].group === ELEMENTS[current].group) {
-        current = i;                  // same shared group: keep the drawer open and the video playing, just move the highlight
+        current = i;                  // same shared group: keep the drawer open and the video playing, only swap the text
         setExpanded();
-        highlightShared();
+        swapText(i);
         return;
       }
       if (state === 'closed') openDrawer(i);
@@ -886,6 +878,7 @@
       current = i;
       fill(i);
       place(i);                       // moved while still closed
+      reserveHeight();                // measure again at the drawer's final width
       state = 'opening';
       setExpanded();
       void drawer.offsetHeight;       // start the slide from the closed size
@@ -936,40 +929,39 @@
 
     // ---------- Drawer content ----------
     function fill(i) {
-      var el = ELEMENTS[i], isShared = shared(i);
-      var groupLine = drawer.querySelector('.drawer-group'), desc = drawer.querySelector('.drawer-desc');
-      drawer.querySelector('.drawer-title').textContent = titleOf(i);
-      groupLine.textContent = GROUPS[el.group].name;
-      groupLine.hidden = isShared;                  // the title already is the group name
-      desc.textContent = el.text;
-      desc.hidden = isShared;                       // a shared group lists every description under the video instead
-      buildSharedList(i);
+      setText(i);
+      reserveHeight();
       buildTabs(clipsOf(i), titleOf(i));
       selectClip(0, false);
     }
-    // Shared group: every element's name and description, with the clicked one marked "Selected"
-    function buildSharedList(i) {
-      sharedList.textContent = '';
-      sharedList.hidden = !shared(i);
-      if (!shared(i)) return;
-      sharedList.setAttribute('aria-label', 'About each ' + GROUPS[ELEMENTS[i].group].name.toLowerCase().replace(/s$/, ''));
-      ELEMENTS.forEach(function (el, j) {
-        if (el.group !== ELEMENTS[i].group) return;
-        var li = make('li', 'shared-item');
-        li.dataset.index = j;
-        li.appendChild(make('strong', 'shared-name', el.name));
-        li.appendChild(document.createTextNode(' ' + el.text));
-        li.appendChild(make('span', 'shared-badge', 'Selected'));
-        sharedList.appendChild(li);
-      });
-      highlightShared();
+    // Left column: group label, the element's name and its description
+    function setText(i) {
+      var el = ELEMENTS[i];
+      head.querySelector('.drawer-group').textContent = GROUPS[el.group].name;
+      head.querySelector('.drawer-title').textContent = el.name;
+      head.querySelector('.drawer-desc').textContent = el.text;
     }
-    function highlightShared() {
-      [].forEach.call(sharedList.children, function (li) {
-        var on = +li.dataset.index === current;
-        li.classList.toggle('is-selected', on);
-        if (on) li.setAttribute('aria-current', 'true'); else li.removeAttribute('aria-current');
+    // In a shared group the text can swap while the drawer is open: keep room for the tallest of them so nothing jumps
+    function reserveHeight() {
+      head.style.minHeight = '';
+      if (current < 0 || !shared(current)) return;
+      var tallest = 0;
+      ELEMENTS.forEach(function (el, j) {
+        if (el.group !== ELEMENTS[current].group) return;
+        setText(j);
+        tallest = Math.max(tallest, head.offsetHeight);
       });
+      setText(current);
+      head.style.minHeight = tallest + 'px';
+    }
+    window.addEventListener('resize', function () { if (state !== 'closed') reserveHeight(); });
+    // Same shared group: crossfade the text (about 150ms), or swap instantly with reduced motion
+    var swapTimer = null;
+    function swapText(i) {
+      clearTimeout(swapTimer);
+      if (reduce.matches) { setText(i); return; }
+      head.classList.add('is-swapping');
+      swapTimer = setTimeout(function () { setText(current); head.classList.remove('is-swapping'); }, 75);
     }
     function buildTabs(clips, title) {
       tablist.textContent = '';
