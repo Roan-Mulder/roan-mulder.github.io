@@ -81,6 +81,7 @@
     /* A YouTube embed in place of a slot: 16:9 like the YouTube player, so the frame fits the video exactly */
     .slot-video { aspect-ratio: 16 / 9; border-radius: .9rem; overflow: hidden; background: #000; }
     .slot-video iframe { display: block; width: 100%; height: 100%; border: 0; }
+    .slot-video + figcaption { margin-top: 7px; text-align: center; }   /* caption hugs the bottom center of the video */
 
     /* ---------- [FILL IN] and [CHECK] notes ---------- */
     .todo { outline: 2px dashed var(--gold); outline-offset: 2px; border-radius: .25rem; padding: 0 .2em; background: rgba(232, 200, 96, .1); color: var(--cream); }
