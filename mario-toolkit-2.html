@@ -15,7 +15,11 @@
   <script>document.documentElement.classList.add("js");</script>
   <style>
     /* ---------- Intro: title, hook, showcase and role box ---------- */
-    .p2-hook { text-align: center; font-size: clamp(1.1rem, 2vw, 1.35rem); max-width: 44rem; margin: 1rem auto 0; padding: 0 var(--pad); }
+    /* Title: sized from the panel's width so it just fits on one line on desktop (the text is about 19.1x its font size wide) */
+    .intro .section-inner { container-type: inline-size; }
+    .intro .project-title { font-size: clamp(2.4rem, calc(100cqi / 19.3), 3.6rem); }
+    .project-years { text-align: center; font-size: .82rem; letter-spacing: .04em; margin: .35rem 0 0; color: var(--sage); }
+    .p2-hook { text-align: center; font-size: clamp(1.1rem, 2vw, 1.35rem); margin: 1rem auto 0; padding: 0 var(--pad); }   /* same width as the title above it */
     .intro { padding-top: 0; padding-bottom: 3rem; }
     .intro .p2-intro { margin-top: 2.5rem; }
     .p2-intro { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2.5rem; align-items: start; }
@@ -302,6 +306,7 @@
     .theme-void .intro .panel { padding: clamp(1.5rem, 4vw, 3rem); }
     .theme-void .intro .project-title { padding: 0; }
     .theme-void .intro .p2-hook { padding: 0; }
+    .theme-void .project-years { color: var(--panel-muted); }
     .theme-void .part { padding: clamp(1.5rem, 4vw, 3rem); margin-top: 2rem; }
     .theme-void .part + .part { border-top: 0; }
     .theme-void .part-label,
@@ -427,7 +432,8 @@
   <section class="section intro" aria-labelledby="page-title">
     <div class="section-inner panel">
       <h1 class="project-title" id="page-title">Void-Based Platformer Level Design Toolkit</h1>
-      <p class="p2-hook">Build Mario Sunshine-style void levels in Unreal Engine 5 with ready-made, beginner-friendly parts.</p>
+      <p class="project-years">(2025-2026)</p>
+      <p class="p2-hook">Unreal Engine 5 Toolkit made for beginner level designers who want to create their own version of the secret levels from Super Mario Sunshine, which are fully void-based.</p>
       <div class="p2-intro">
       <!-- The old page (mario-toolkit.html) embeds the gameplay video from YouTube (https://www.youtube.com/embed/2UT7SS-zG0E) and uses images/mario-cover.gif as its cover. Either could fill this slot. -->
       <figure class="slot slot--wide" data-slot="showcase" data-alt="Showcase video of the demo level built with the toolkit">
@@ -1271,7 +1277,7 @@
 </script>
 <!-- Preview card text for the portfolio grid (move later):
 Title: Void-Based Platformer Level Design Toolkit
-Hook: Build Mario Sunshine-style void levels in Unreal Engine 5 with ready-made, beginner-friendly parts.
+Hook: Unreal Engine 5 Toolkit made for beginner level designers who want to create their own version of the secret levels from Super Mario Sunshine, which are fully void-based.
 Role: Solo level designer
 - Turned research on three platformers into a toolkit of eight ready-made elements
 - Tested three technical approaches and picked the most beginner-friendly
