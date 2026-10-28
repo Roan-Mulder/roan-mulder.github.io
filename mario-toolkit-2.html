@@ -22,7 +22,12 @@
     .p2-hook { text-align: center; font-size: clamp(1.1rem, 2vw, 1.35rem); margin: 1rem auto 0; padding: 0 var(--pad); }   /* same width as the title above it */
     .intro { padding-top: 0; padding-bottom: 3rem; }
     .intro .p2-intro { margin-top: 2.5rem; }
-    .p2-intro { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2.5rem; align-items: center; }   /* the video and its caption sit centered next to the role box */
+    .p2-intro { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2.5rem; align-items: center; }
+    /* Side by side: the video itself is centered on the role box, and its caption hangs just below it */
+    @media (min-width: 861px) {
+      .p2-intro > .slot { position: relative; }
+      .p2-intro > .slot > figcaption { position: absolute; top: 100%; left: 0; right: 0; }
+    }
 
     /* Role box: cream card so it stands apart from the dark page */
     .role-box { background: var(--cream); color: var(--ink); border-radius: 1.2rem; padding: 1.6rem 1.8rem; border-left: .6rem solid var(--gold); }
