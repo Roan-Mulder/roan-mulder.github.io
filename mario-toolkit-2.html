@@ -114,7 +114,7 @@
     .drawer.no-anim, .drawer.no-anim .drawer-body { transition: none !important; }
     .drawer-clip { position: relative; min-height: 0; overflow: hidden; background: #f4f8f9; color: #12281d; border-radius: 0 0 1rem 1rem; box-shadow: inset 0 14px 14px -12px rgba(18, 40, 29, .4), inset 0 0 0 1px rgba(18, 40, 29, .08); }
     .drawer-body {
-      display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr); grid-template-areas: "head media" "head enlarge"; gap: .9rem 2rem; align-items: start;
+      display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr); grid-template-areas: "head media"; gap: .9rem 2rem; align-items: start;
       padding: 1.5rem 1.6rem 2.4rem; opacity: 0; transform: translateY(-.8rem); transition: opacity .33s, transform .33s;
     }
     .drawer.is-open .drawer-body { opacity: 1; transform: none; }
@@ -133,13 +133,18 @@
     .drawer-ph { position: absolute; inset: 0; display: none; place-content: center; gap: .3rem; padding: 1rem; text-align: center; color: #26313a; }
     .drawer-media.is-missing .drawer-ph { display: grid; }
     .drawer-media.is-missing .drawer-video { display: none; }
-    .drawer-enlarge {
-      grid-area: enlarge; justify-self: start; min-height: 44px; padding: .55rem 1.3rem; font: inherit; font-size: .92rem;
-      color: var(--cream); background: var(--moss); border: 2px solid #12281d; border-radius: 999px; cursor: pointer;
+    /* Under the video: the enlarge hint (attached to the video), then the clip buttons */
+    .drawer-clipbox { position: relative; }
+    .drawer-hint { margin: 7px 0 0; font-size: .82rem; line-height: 1.3; color: #3b5a4a; text-align: right; }
+    .drawer-hint.is-off { visibility: hidden; }
+    .drawer-expand {
+      position: absolute; top: .5rem; right: .5rem; z-index: 1; display: grid; place-items: center; width: 44px; height: 44px; padding: 0;
+      border: 2px solid rgba(255, 255, 255, .85); border-radius: 50%; background: rgba(18, 40, 29, .78); color: #fff; cursor: zoom-in;
     }
-    .drawer-enlarge:hover { background: #12281d; }
-    .drawer-enlarge:disabled { color: #44544c; background: #e1e8ea; border-color: #93a69e; cursor: not-allowed; }
-    .drawer-enlarge:focus-visible { outline: 3px solid #12281d; outline-offset: 3px; }
+    .drawer-expand[hidden] { display: none; }
+    .drawer-expand svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+    .drawer-expand:hover { background: #12281d; }
+    .drawer-expand:focus-visible { outline: 3px solid #12281d; outline-offset: 3px; }
     .drawer-handle { position: absolute; left: 50%; bottom: .75rem; width: 3.5rem; height: .35rem; margin-left: -1.75rem; border-radius: 99px; background: #8ea3ab; }
 
     /* Lightbox */
@@ -160,10 +165,10 @@
     .lightbox-hint { display: none; margin: 0; padding: 0 1rem; font-size: .9rem; color: #fff; text-align: center; }
 
     /* Clip tabs (only when an element has two or more clips) */
-    .clip-tabs { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+    .clip-tabs { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
     .clip-tabs[hidden] { display: none; }
     .clip-tab {
-      min-height: 44px; padding: .35rem .95rem; font: inherit; font-size: .85rem; line-height: 1.2;
+      min-height: 44px; padding: .35rem .95rem; font: inherit; font-size: .85rem; line-height: 1.2; white-space: normal; text-align: center;
       color: #12281d; background: #fff; border: 2px solid #5f7f6a; border-radius: 999px; cursor: pointer;
     }
     .clip-tab:hover { border-color: #12281d; }
@@ -172,7 +177,7 @@
 
     /* Wide clips (wider than 2.4:1) */
     .wide-hint { display: none; margin: .45rem 0 0; font-size: .85rem; color: #3b5a4a; }
-    .drawer.is-wide .drawer-body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "media" "enlarge"; }
+    .drawer.is-wide .drawer-body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "media"; }
     .drawer-strip:focus-visible, .lightbox-stage:focus-visible { outline: 3px solid #12281d; outline-offset: 3px; }
 
     /* Lightbox: tabs, placeholder and sideways scrolling */
@@ -195,7 +200,10 @@
       /* On phones the drawer sits inside the grid, right under the row of the button that opened it */
       .desk-grid > .drawer { grid-column: 1 / -1; margin: calc(-.75rem + 4px) .35rem 0; }
       .drawer { margin: 0 .6rem; }
-      .drawer-body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "media" "enlarge"; padding: 1.2rem 1.1rem 2.2rem; }
+      .drawer-body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "media"; padding: 1.2rem 1.1rem 2.2rem; }
+      .drawer-hint { text-align: center; }
+      .clip-tabs { flex-direction: column; align-items: center; }
+      .clip-tab { width: 100%; max-width: 320px; }
       .drawer-title { font-size: 1.3rem; }
       .lightbox-stage video { max-width: 100vw; max-height: 80vh; }
       .lightbox-close { width: 48px; height: 48px; }
@@ -451,10 +459,13 @@
                       <div class="drawer-ph"><strong class="drawer-ph-name"></strong><span>Showcase video coming soon</span></div>
                     </div>
                   </div>
+                  <button type="button" class="drawer-expand" aria-label="Enlarge video" hidden>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7"/></svg>
+                  </button>
+                  <p class="drawer-hint">Click video to enlarge</p>
                   <p class="wide-hint">Swipe sideways to see the whole clip</p>
                   <div class="clip-tabs" role="tablist" hidden></div>
                 </div>
-                <button type="button" class="drawer-enlarge" disabled>Click to enlarge</button>
               </div>
               <span class="drawer-handle" aria-hidden="true"></span>
             </div>
@@ -739,7 +750,7 @@
      group: "core" (Core Behaviors) or "logic" (Level Logic Actors). Group settings are in GROUPS below.
      clips: one or more videos. With two or more, tabs appear under the video.
             (Not used in a shared group: those elements use the group's clips instead.)
-       label      (optional) the tab text. The first clip is called "Showcase" unless it has a label.
+       label      the clip button text (needed when an element has two or more clips).
        file       the video inside MEDIA_FOLDER. The poster image has the same name, ending in .jpg.
        mobileFile (optional) a smaller copy of the same video, used on phones (640px wide and narrower).
        start, end (optional) seconds. When both are set, only that part of the video loops.
@@ -749,19 +760,20 @@
   var WIDE_RATIO = 2.4;               // clips wider than 2.4:1 count as "wide"
   var ELEMENTS = [
     { group: 'core', name: 'Simple movement', text: 'Moves a platform back and forth along an axis.', clips: [
-      { file: 'museum-simple-movement.mp4', mobileFile: 'museum-simple-movement-mobile.mp4' },
+      { label: 'Simple movement', file: 'museum-simple-movement.mp4', mobileFile: 'museum-simple-movement-mobile.mp4' },
       { label: 'Combined with rotation', file: 'museum-movement-rotation-combined.mp4' }
     ] },
     { group: 'core', name: 'Simple rotation', text: 'Spins a platform around any axis.', clips: [
-      { file: 'museum-simple-rotation.mp4' },
+      { label: 'Simple rotation', file: 'museum-simple-rotation.mp4' },
       { label: 'Combined with movement', file: 'museum-movement-rotation-combined.mp4' }
     ] },
     { group: 'core', name: 'Disappearing platform', text: 'Vanishes and returns, on a timer or when stepped on, including alternating patterns.', clips: [
-      { file: 'museum-disappearing-platform.mp4' },
+      { label: 'Disappearing platform', file: 'museum-disappearing-platform.mp4' },
       { label: 'Alternating platforms', file: 'museum-alternating-platforms.mp4' }
     ] },
     { group: 'core', name: 'Bouncing platform', text: 'A trampoline bounce, or a balloon that launches the player in an arc.', clips: [
-      { file: 'museum-bouncing-platform.mp4' }
+      { label: 'Simple bounce', file: 'museum-bouncing-simple.mp4' },
+      { label: 'Balloon bounce', file: 'museum-bouncing-balloon.mp4' }
     ] },
     { group: 'core', name: 'Spline moving platform', text: 'Follows a drawn path and can pause or rotate at points along it.', clips: [
       { file: 'museum-spline-platform.mp4' }
@@ -793,7 +805,8 @@
     var drawerHint = clipbox.querySelector('.wide-hint');
     var tablist = drawer.querySelector('.clip-tabs');
     var head = drawer.querySelector('.drawer-head');
-    var enlarge = drawer.querySelector('.drawer-enlarge');
+    var hint = drawer.querySelector('.drawer-hint');
+    var expand = drawer.querySelector('.drawer-expand');
     var stage = lightbox.querySelector('.lightbox-stage');
     var lightboxPh = lightbox.querySelector('.lightbox-ph');
     var lightboxHint = lightbox.querySelector('.lightbox-wide-hint');
@@ -821,7 +834,7 @@
     function make(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
     function isNum(v) { return typeof v === 'number' && isFinite(v); }
     function play() { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
-    function clipLabel(clip, c) { return clip.label || (c === 0 ? 'Showcase' : 'Clip ' + (c + 1)); }
+    function clipLabel(clip, c) { return clip.label || 'Clip ' + (c + 1); }   // labels come from ELEMENTS
     function inLightbox() { return lightbox.open; }
     function shared(i) { return !!GROUPS[ELEMENTS[i].group].shared; }
     function clipsOf(i) { return shared(i) ? GROUPS[ELEMENTS[i].group].clips : ELEMENTS[i].clips; }
@@ -980,6 +993,7 @@
         t.type = 'button';
         t.id = 'clip-tab-' + c;
         t.setAttribute('role', 'tab');
+        t.setAttribute('aria-label', 'Show clip: ' + clipLabel(clip, c));
         t.setAttribute('aria-controls', inLightbox() ? stage.id : media.id);
         t.addEventListener('click', function () { selectClip(c, true); });
         tabs.push(t);
@@ -1022,7 +1036,7 @@
       lightbox.classList.remove('is-missing');
       media.style.aspectRatio = '';                     // back to 16:9 until the new video says its shape
       setShape(16 / 9);
-      enlarge.disabled = !inLightbox();
+      if (!inLightbox()) setEnlargeable(false);
       video.pause();
       video.preload = 'none';
       triedFull = !(phone.matches && clip.mobileFile);
@@ -1052,7 +1066,7 @@
     video.addEventListener('timeupdate', function () {
       if (segEnd !== null && video.currentTime >= segEnd) video.currentTime = segStart;   // loop only the segment
     });
-    video.addEventListener('loadeddata', function () { media.classList.add('is-ready'); enlarge.disabled = !lightbox.showModal; });
+    video.addEventListener('loadeddata', function () { media.classList.add('is-ready'); setEnlargeable(!!lightbox.showModal); });
     video.addEventListener('error', function () {
       if (!video.getAttribute('src')) return;
       if (!triedFull) {                                 // the mobile copy failed: try the full video before giving up
@@ -1064,7 +1078,7 @@
       }
       media.classList.add('is-missing');                // missing or broken file: show the grey placeholder
       lightbox.classList.add('is-missing');
-      enlarge.disabled = true;
+      setEnlargeable(false);
     });
 
     // ---------- Wide clips ----------
@@ -1088,9 +1102,18 @@
       makeScroller(stage, scroll && inLightbox(), lightboxHint);
     }
 
-    function setEnlargeLabel() { enlarge.textContent = noHover.matches ? 'Tap to enlarge' : 'Click to enlarge'; }
-    setEnlargeLabel();
-    onChange(noHover, setEnlargeLabel);
+    // The hint is plain text (not focusable); keyboard users use the expand icon on the video
+    function setHint() {
+      hint.textContent = reduce.matches ? 'Use the expand icon to enlarge' : (noHover.matches ? 'Tap video to enlarge' : 'Click video to enlarge');
+    }
+    setHint();
+    onChange(noHover, setHint);
+    onChange(reduce, setHint);
+    function setEnlargeable(on) {           // only offer enlarging when there is a video to enlarge
+      expand.hidden = !on;
+      hint.classList.toggle('is-off', !on);
+    }
+    setEnlargeable(false);
 
     // ---------- Lightbox: the same video (and tabs) move into a full-screen dialog ----------
     function sizeLightboxVideo() {
@@ -1131,10 +1154,10 @@
       document.documentElement.classList.remove('is-locked');
       updateScrollers();
       if (state === 'open' && !reduce.matches) play(); else video.pause();
-      if (enlarge.disabled) { var t = tabs[currentClip] || buttons[current]; t.focus({ preventScroll: true }); }
-      else enlarge.focus({ preventScroll: true });
+      if (expand.hidden) { var t = tabs[currentClip] || buttons[current]; t.focus({ preventScroll: true }); }
+      else expand.focus({ preventScroll: true });
     });
-    enlarge.addEventListener('click', openLightbox);
+    expand.addEventListener('click', openLightbox);
     video.addEventListener('click', function () { if (video.parentNode === media && !video.controls) openLightbox(); });
     closeLightbox.addEventListener('click', function () { lightbox.close(); });
     lightbox.addEventListener('click', function (e) { if (e.target === lightbox || e.target === stage) lightbox.close(); });
