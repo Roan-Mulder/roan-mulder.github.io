@@ -549,16 +549,16 @@
             <h4>Core Behaviors</h4>
             <ul>
               <li><strong>Simple movement:</strong> Moves any object back and forth along a straight line.</li>
-              <li><strong>Simple rotation:</strong> Spins a platform around any axis.</li>
-              <li><strong>Disappearing platform:</strong> Vanishes and returns, on a timer or when stepped on, including alternating patterns.</li>
-              <li><strong>Bouncing platform:</strong> A trampoline bounce, or a balloon that launches the player in an arc.</li>
+              <li><strong>Simple rotation:</strong> Spins any object around an axis, again and again.</li>
+              <li><strong>Disappearing platform:</strong> Makes a platform vanish and come back, on a timer or when the player steps on it.</li>
+              <li><strong>Bouncing platform:</strong> Launches the player: a trampoline bounce, or a balloon that pops and sends them in an arc.</li>
               <li><strong>Spline moving platform:</strong> Moves a platform along a path you draw, and can pause or rotate it at points along the way.</li>
             </ul>
             <h4>Level Logic Actors</h4>
             <ul>
               <li><strong>Void actor:</strong> Restarts the level when the player falls.</li>
-              <li><strong>End collectable:</strong> Completes the level.</li>
-              <li><strong>Regular collectable:</strong> Coins that can be required to unlock the end collectable.</li>
+              <li><strong>End collectable:</strong> Completes the level when the player collects it.</li>
+              <li><strong>Regular collectable:</strong> A coin the player can collect. Coins can be required to unlock the end collectable.</li>
             </ul>
           </div>
 
@@ -910,15 +910,67 @@
       { label: 'Simple movement', file: 'museum-simple-movement.mp4', mobileFile: 'museum-simple-movement-mobile.mp4' },
       { label: 'Combined with rotation', file: 'museum-movement-rotation-combined.mp4' }
     ] },
-    { group: 'core', name: 'Simple rotation', text: 'Spins a platform around any axis.', clips: [
+    { group: 'core', name: 'Simple rotation', text: 'Spins any object around an axis, again and again.',
+      // DRAFT: rewrite me
+      details: {
+        steps: [
+          'Drag a mesh into your level and set it to Moveable.',
+          'Add the Simple Rotation component.',
+          'Pick the axis it spins around.'
+        ],
+        options: [
+          'Which direction it spins',
+          'How fast it spins'
+        ],
+        notes: [
+          'Spinning on two axes at once makes a diagonal tumble. For a clean spin, use one axis.',
+          'Combine it with Simple movement for platforms that travel and spin.'
+        ]
+      },
+      clips: [
       { label: 'Simple rotation', file: 'museum-simple-rotation.mp4' },
       { label: 'Combined with movement', file: 'museum-movement-rotation-combined.mp4' }
     ] },
-    { group: 'core', name: 'Disappearing platform', text: 'Vanishes and returns, on a timer or when stepped on, including alternating patterns.', clips: [
+    { group: 'core', name: 'Disappearing platform', text: 'Makes a platform vanish and come back, on a timer or when the player steps on it.',
+      // DRAFT: rewrite me
+      details: {
+        steps: [
+          'Drag a mesh into your level and add the Disappearing Platform component.',
+          'Choose what triggers it: a timer, or the player touching it.',
+          'Set how long the platform stays and how long it is gone.'
+        ],
+        options: [
+          'What triggers it',
+          'How long it is visible',
+          'How long it is gone',
+          'Reverse the pattern, so neighboring platforms take turns'
+        ],
+        notes: [
+          'For alternating platforms, give both platforms the same timing values.'
+        ]
+      },
+      clips: [
       { label: 'Disappearing platform', file: 'museum-disappearing-platform.mp4' },
       { label: 'Alternating platforms', file: 'museum-alternating-platforms.mp4' }
     ] },
-    { group: 'core', name: 'Bouncing platform', text: 'A trampoline bounce, or a balloon that launches the player in an arc.', clips: [
+    { group: 'core', name: 'Bouncing platform', text: 'Launches the player: a trampoline bounce, or a balloon that pops and sends them in an arc.',
+      // DRAFT: rewrite me
+      details: {
+        steps: [
+          'Drag a mesh into your level and add the Bouncing Platform component.',
+          'Choose the type: Simple Bounce or Balloon Bounce.',
+          'Set the direction, distance and height of the launch.'
+        ],
+        options: [
+          'Which bounce type',
+          'How far and how high it launches'
+        ],
+        notes: [
+          'Guide arrows in the editor show the launch path and scale with your values.',
+          'Balloons pop when the player touches them. Place a balloon at the tip of a guide arrow to chain jumps: the sideways arrow keeps your height, and the upward arrow gains height.'
+        ]
+      },
+      clips: [
       { label: 'Simple bounce', file: 'museum-bouncing-simple.mp4' },
       { label: 'Balloon bounce', type: 'image', file: 'museum-bouncing-balloon.png', alt: "[FILL IN: describe what the image shows, for example 'A balloon in the museum level launching the player in an arc, with the guide arrow showing the direction.']" }
     ] },
@@ -930,9 +982,52 @@
       clips: [
       { file: 'museum-spline-platform.mp4', note: 'Video sped up 2x' }
     ] },
-    { group: 'logic', name: 'Void actor',          text: 'Restarts the level when the player falls.' },
-    { group: 'logic', name: 'End collectable',     text: 'Completes the level.' },
-    { group: 'logic', name: 'Regular collectable', text: 'Coins that can be required to unlock the end collectable.' }
+    { group: 'logic', name: 'Void actor', text: 'Restarts the level when the player falls.',
+      // DRAFT: rewrite me
+      details: {
+        steps: [
+          'Place one void actor in your level.',
+          'Scale it to cover the whole area below your platforms.'
+        ],
+        options: [
+          'How big the fall zone is (its scale)'
+        ],
+        notes: [
+          'Use only one per level.',
+          'It finds the player on its own, so there is nothing to connect.',
+          'It switches itself off once the end collectable is collected.'
+        ]
+      } },
+    { group: 'logic', name: 'End collectable', text: 'Completes the level when the player collects it.',
+      // DRAFT: rewrite me
+      details: {
+        steps: [
+          'Place the end collectable where the level ends.',
+          'Optional: place regular collectables and mark them as required.'
+        ],
+        options: [
+          'Whether coins must be collected first'
+        ],
+        notes: [
+          'It finds the required coins on its own and shows a counter on screen.',
+          'With required coins, it only appears after the last one is collected.'
+        ]
+      } },
+    { group: 'logic', name: 'Regular collectable', text: 'A coin the player can collect. Coins can be required to unlock the end collectable.',
+      // DRAFT: rewrite me
+      details: {
+        steps: [
+          'Place coins around your level.',
+          'To make a coin count towards the end collectable, switch on its required setting.'
+        ],
+        options: [
+          'Whether the coin is required'
+        ],
+        notes: [
+          'Required coins turn red, so players can tell them apart.',
+          'The counter on screen shows how many are left.'
+        ]
+      } }
   ];
   var GROUPS = {
     core:  { name: 'Core Behaviors' },
