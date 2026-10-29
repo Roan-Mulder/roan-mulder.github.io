@@ -78,6 +78,8 @@
     .weave-text > :last-child { margin-bottom: 0; }
     .weave-media { display: grid; gap: 1.5rem; }
     .list-gap { margin-top: 2rem; }
+    .step--last { padding-bottom: 3rem; }      /* a little more room at the bottom of Part 2 */
+    .howto-link { margin: 0; }                 /* the image column's gap already gives the 1.5rem the old page had above it */
     .step li.gap-before { margin-top: 1.65em; }   /* one empty line above this bullet */
 
     /* ---------- Content images: click (or tap) to enlarge in the lightbox; a labelled grey box until the file is added ---------- */
@@ -816,7 +818,7 @@
           </div>
         </div>
 
-        <div class="step">
+        <div class="step step--last">
           <h3>7. Documenting it</h3>
           <div class="weave">
             <div class="weave-text">
@@ -828,6 +830,8 @@
                 <div class="slot-box">Image coming soon: images/museum/howto-contents.png</div>
                 <figcaption>Each element has its own chapter, followed by a level setup guide.</figcaption>
               </figure>
+              <!-- Same button and spot as on mario-toolkit.html: under the How-To image. The PDF there is the latest version (2.1). -->
+              <p class="howto-link"><a class="btn" href="files/Mario-Toolkit-How-To.pdf" target="_blank" rel="noopener">Read the full How-To (PDF)</a></p>
             </div>
           </div>
         </div>
