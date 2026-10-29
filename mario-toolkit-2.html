@@ -78,6 +78,7 @@
     .weave-text > :last-child { margin-bottom: 0; }
     .weave-media { display: grid; gap: 1.5rem; }
     .list-gap { margin-top: 2rem; }
+    .step li.gap-before { margin-top: 1.65em; }   /* one empty line above this bullet */
 
     /* ---------- Content images: click (or tap) to enlarge in the lightbox; a labelled grey box until the file is added ---------- */
     .shot-open { display: block; width: 100%; padding: 0; border: 0; border-radius: .9rem; background: none; cursor: zoom-in; }
@@ -697,21 +698,21 @@
             <div class="weave-text">
               <p>I tested three ways to build a rotating platform:</p>
               <ul>
-                <li><strong>Timelines</strong> (Unreal's built-in animation curves): worked, but weren't modular. I knew them best, so this was a deliberate step out of my comfort zone.</li>
                 <li><strong>Custom actor components</strong> (pieces of logic you attach to an object): the logic lives inside the component, so a user drags a mesh into the level, adds the component, and it works. This became the backbone of the toolkit.</li>
+                <li><strong>Timelines</strong> (Unreal's built-in animation curves): worked, but weren't modular. I knew them best, so this was a deliberate step out of my comfort zone.</li>
                 <li><strong>Target points</strong> (markers you place in the level): moved a mesh between two points, but placing the points was too fiddly for a beginner tool.</li>
               </ul>
             </div>
             <div class="weave-media shot-trio">
               <figure class="slot shot">
-                <button type="button" class="shot-open" aria-label="Enlarge image: Blueprint graph of the rotating platform built with a Timeline"><img src="images/museum/engine-timeline-blueprint.png" alt="Blueprint graph of the rotating platform built with a Timeline" loading="lazy" onerror="shotMissing(this)"></button>
-                <div class="slot-box">Image coming soon: images/museum/engine-timeline-blueprint.png</div>
-                <figcaption>Timelines</figcaption>
-              </figure>
-              <figure class="slot shot">
                 <button type="button" class="shot-open" aria-label="Enlarge image: Blueprint graph of the rotating platform built as a custom actor component"><img src="images/museum/engine-actor-component-blueprint.png" alt="Blueprint graph of the rotating platform built as a custom actor component" loading="lazy" onerror="shotMissing(this)"></button>
                 <div class="slot-box">Image coming soon: images/museum/engine-actor-component-blueprint.png</div>
                 <figcaption>Custom actor component</figcaption>
+              </figure>
+              <figure class="slot shot">
+                <button type="button" class="shot-open" aria-label="Enlarge image: Blueprint graph of the rotating platform built with a Timeline"><img src="images/museum/engine-timeline-blueprint.png" alt="Blueprint graph of the rotating platform built with a Timeline" loading="lazy" onerror="shotMissing(this)"></button>
+                <div class="slot-box">Image coming soon: images/museum/engine-timeline-blueprint.png</div>
+                <figcaption>Timelines</figcaption>
               </figure>
               <figure class="slot shot">
                 <button type="button" class="shot-open" aria-label="Enlarge image: Two target point markers placed in an empty Unreal Engine level"><img src="images/museum/engine-target-points.png" alt="Two target point markers placed in an empty Unreal Engine level" loading="lazy" onerror="shotMissing(this)"></button>
@@ -738,7 +739,7 @@
             <li><strong>Spline rotation:</strong> a cube riding the spline turned diagonally on its second rotation. The rotation was blending the long way round. Enabling Shortest Path (a setting that makes it turn the short way) fixed it.</li>
             <li><strong>Cube fade:</strong> on a six-sided cube with six materials, only one face faded. I solved it with a Sequence node (a Blueprint block that runs several steps one after another) and six parallel branches, one per material.</li>
             <li><strong>Coin system:</strong> regular coins link themselves to the end collectable, which counts them and shows a counter. When collection is required, the coins turn red and the end collectable only appears once all are collected.</li>
-            <li><strong>Designed for beginners:</strong> settings use dropdowns with working defaults, editor guides show what each setting does, and Blueprint comments are color-coded by purpose.</li>
+            <li class="gap-before"><strong>Designed for beginners:</strong> settings use dropdowns with working defaults, editor guides show what each setting does, and Blueprint comments are color-coded by purpose.</li>
           </ul>
           <div class="shot-pair">
             <figure class="slot shot">
