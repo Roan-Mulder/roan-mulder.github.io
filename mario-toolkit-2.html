@@ -12,7 +12,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <script>document.documentElement.classList.add("js");</script>
+  <script>
+    document.documentElement.classList.add("js");
+    // A content image whose file is not in the media folder yet: show its labelled grey box instead
+    function shotMissing(img) { img.parentNode.disabled = true; img.closest('.shot').classList.add('is-missing'); }
+  </script>
   <style>
     /* ---------- Intro: title, hook, showcase and role box ---------- */
     /* Title: sized from the panel's width so it just fits on one line on desktop (the text is about 19.1x its font size wide) */
@@ -73,6 +77,31 @@
     .weave--flip > .weave-media { order: -1; }
     .weave-text > :last-child { margin-bottom: 0; }
     .weave-media { display: grid; gap: 1.5rem; }
+    .list-gap { margin-top: 2rem; }
+
+    /* ---------- Content images: click (or tap) to enlarge in the lightbox; a labelled grey box until the file is added ---------- */
+    .shot-open { display: block; width: 100%; padding: 0; border: 0; border-radius: .9rem; background: none; cursor: zoom-in; }
+    .shot-open img { display: block; transition: filter .15s, box-shadow .15s; }
+    .shot-open:hover img { filter: brightness(1.05); box-shadow: 0 0 0 3px var(--btn-blue, #739bbb); }
+    .shot > .slot-box { display: none; }
+    .shot.is-missing > .slot-box { display: grid; }
+    .shot.is-missing .shot-open { display: none; }
+    .shot--hint > .slot-box { aspect-ratio: 4 / 1; }      /* the two full-width strips (drafts timeline, paint-overs) */
+    .shot--feature > .slot-box { aspect-ratio: 3 / 1; }
+    /* The hint sits on the caption's line, at the right edge of the image; the caption stays centered */
+    .shot--hint figcaption { position: relative; padding: 0 10rem; min-height: 1.2em; }
+    .shot-hint { position: absolute; top: 0; right: 0; font-size: .82rem; line-height: 1.3; color: var(--panel-muted, #3b5a4a); }
+    .hint-tap { display: none; }
+    @media (hover: none) { .hint-click { display: none; } .hint-tap { display: inline; } }
+    html:not(.js) .shot-hint, .shot.is-missing .shot-hint { display: none; }
+    /* Step 3: the tall screenshot on the left, the other two stacked on its right */
+    .shot-trio { grid-template-columns: 1fr 1fr; gap: 1rem; align-items: center; }
+    .shot-trio > .shot:first-child { grid-row: span 2; }
+    /* Step 5: two screenshots side by side */
+    .shot-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; margin-top: 1.5rem; }
+    /* Part 3: three take-aways side by side, the finished demo level below */
+    .part .takeaways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem; padding-left: 1.2rem; margin: 0; }
+    .slot.shot--feature { max-width: 56rem; margin: 2.5rem auto 0; }
 
     /* ---------- Image slots: grey boxes to swap for <img> later ---------- */
     .slot { margin: 0; }
@@ -208,6 +237,11 @@
     .lightbox-close svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }
     .lightbox-close:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
     .lightbox-hint { display: none; margin: 0; padding: 0 1rem; font-size: .9rem; color: #fff; text-align: center; }
+    /* A content image of the page in the lightbox (the museum video, tabs and placeholder stay hidden) */
+    .lightbox-picture { display: none; height: auto; max-width: 90vw; max-height: 88vh; object-fit: contain; }
+    .lightbox.is-picture .lightbox-picture { display: block; }
+    .lightbox.is-picture .lightbox-frame, .lightbox.is-picture .lightbox-ph, .lightbox.is-picture .clip-tabs, .lightbox.is-picture .lightbox-wide-hint { display: none !important; }
+    .lightbox.is-picture:not(.is-landscape) .lightbox-hint { display: none; }   /* "Rotate your phone" only for wide images */
 
     /* Clip tabs (only when an element has two or more clips) */
     .clip-tabs { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
@@ -254,6 +288,10 @@
     .lightbox-stage.is-scroll ~ .lightbox-wide-hint { display: block; }
 
     @media (max-width: 640px) {
+      .shot-trio { grid-template-columns: 1fr; }
+      .shot-trio > .shot:first-child { grid-row: auto; }
+      .shot--hint figcaption { padding: 0; }
+      .shot-hint { position: static; display: block; margin-top: .2rem; }
       .desk { padding: 1.1rem 1rem 1.3rem; }
       .desk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .desk-grid > .el-btn:last-of-type:nth-of-type(odd) { grid-column: 1 / -1; }
@@ -266,7 +304,7 @@
       .clip-tabs { flex-direction: column; align-items: center; }
       .clip-tab { width: 100%; max-width: 320px; }
       .drawer-title { font-size: 1.3rem; }
-      .lightbox-stage video, .lightbox-stage .drawer-image { max-width: 100vw; max-height: 80vh; }
+      .lightbox-stage video, .lightbox-stage .drawer-image, .lightbox-picture { max-width: 100vw; max-height: 80vh; }
       .lightbox-close { width: 48px; height: 48px; }
       /* Wide clip on a phone: a sideways-scrolling strip, at least 220px tall so the text stays readable */
       .drawer.is-wide .drawer-body { padding: 1.2rem 12px 12px; }
@@ -290,7 +328,8 @@
 
     @media (max-width: 860px) {
       .p2-intro, .weave { grid-template-columns: 1fr; gap: 1.5rem; }
-      .weave--flip > .weave-media { order: 0; }
+      .weave > .weave-media { order: -1; }   /* stacked: the image always comes first */
+      .shot-pair, .part .takeaways { grid-template-columns: 1fr; gap: 1.5rem; }
       .part { padding-top: 3rem; }
       .overview ol { padding: 6px; gap: .3rem; }
       .overview a { padding: .4rem .55rem; font-size: .8rem; }   /* smaller padding first; wraps only if it still does not fit */
@@ -452,14 +491,14 @@
 </div>
 <!--
   HOW TO ADD A REAL IMAGE
-  Each image slot looks like this:
-    <figure class="slot" data-slot="paint-overs" data-alt="...">
-      <div class="slot-box" role="img" aria-label="...">Image slot: ...</div>
+  Every content image is already in place, for example:
+    <figure class="slot shot">
+      <button type="button" class="shot-open" aria-label="Enlarge image: ..."><img src="images/museum/paint-overs.png" alt="..." loading="lazy" onerror="shotMissing(this)"></button>
+      <div class="slot-box">Image coming soon: images/museum/paint-overs.png</div>
       <figcaption>...</figcaption>
     </figure>
-  Replace only the <div class="slot-box" ...>...</div> line with:
-    <img src="images/your-file.jpg" alt="(copy the data-alt text)" loading="lazy">
-  Keep the <figcaption>. Search for "todo" to find every [FILL IN] and [CHECK].
+  Drop the file with that exact name into images/museum/ and it shows up (until then the grey box shows).
+  Clicking the image opens it in the lightbox. Search for "todo" to find every [FILL IN] and [CHECK].
 -->
 <a class="skip-link" href="#content">Skip to content</a>
 <header class="site-header">
@@ -528,13 +567,9 @@
         <div class="weave">
           <div class="weave-text">
             <p>The secret levels in Super Mario Sunshine are platforming challenges over an empty space. One missed jump and you fall. I turned the behaviors of those levels into parts that anyone can add to their own meshes (the 3D objects a level is built from) in Unreal Engine 5, with little to no Blueprint work (Blueprints are Unreal's visual scripting: you connect blocks instead of writing code). The Sunshine look is kept for the demo level only.</p>
-            <p>It's made for three groups: Unreal Engine 5 beginners who want to try level design, fans of 3D platformers who want to recreate secret levels, and advanced users who want to expand an existing toolkit.</p>
           </div>
-          <div class="weave-media">
-            <figure class="slot" data-slot="demo-level" data-alt="The demo level seen from the side, with the start, the hardest section and the goal marked">
-              <div class="slot-box" role="img" aria-label="Placeholder: the demo level, with the start, hardest section and goal marked">Image slot: the demo level, with the start, hardest section and goal marked</div>
-              <figcaption>The demo level. <span class="todo">[FILL IN: label what the reader should look at]</span></figcaption>
-            </figure>
+          <div class="weave-text">
+            <p>It's made for three groups: Unreal Engine 5 beginners who want to try level design, fans of 3D platformers who want to recreate secret levels, and advanced users who want to expand an existing toolkit.</p>
           </div>
         </div>
 
@@ -603,33 +638,30 @@
 
         <div class="step">
           <h3>1. Finding the idea</h3>
-          <div class="weave">
-            <div class="weave-text">
-              <p>My first proposal was a Banjo-Kazooie character controller. I changed the concept before the first review because the Sunshine secret levels were closer to what a level designer actually does. A review of my first Sunshine draft pushed it further: the preset Sunshine meshes were too narrow, so I switched to behaviors that work on any mesh. In total there were five drafts over three weeks.</p>
-            </div>
-            <div class="weave-media">
-              <figure class="slot" data-slot="proposal-drafts" data-alt="Five proposal documents side by side, from the Banjo-Kazooie controller on the left to the final toolkit on the right">
-                <div class="slot-box" role="img" aria-label="Placeholder: the five proposal drafts, side by side in order">Image slot: the five proposal drafts, side by side in order</div>
-                <figcaption>The five proposal drafts, from the Banjo-Kazooie controller (left) to the final toolkit (right). The list of obstacles gets shorter and more organised each time.</figcaption>
-              </figure>
-            </div>
-          </div>
+          <p>At the start of the block, I began by brainstorming what game I wanted to base my project on. My mind quickly went to Banjo-Kazooie, which is one of my all-time favorite games. Initially I was planning to recreate Banjo-Kazooie's Core Movement within Unreal Engine 5, but I pivoted away from that. My reasoning for the pivot was that recreating the 3Cs (Character, Camera, Controls) of a game didn't fit the work a level designer should focus on. So after some more drafts, I ended up with a proposal of creating a toolkit which would be able to recreate the Secret Levels from Super Mario Sunshine with behaviors that work on any mesh.</p>
+          <figure class="slot shot shot--hint">
+            <button type="button" class="shot-open" aria-label="Enlarge image: Timeline of the proposal drafts from week 1 to week 3, from the Banjo-Kazooie proposal to the final Super Mario Sunshine proposal after feedback"><img src="images/museum/proposal-drafts-timeline.png" alt="Timeline of the proposal drafts from week 1 to week 3, from the Banjo-Kazooie proposal to the final Super Mario Sunshine proposal after feedback" loading="lazy" onerror="shotMissing(this)"></button>
+            <div class="slot-box">Image coming soon: images/museum/proposal-drafts-timeline.png</div>
+            <figcaption>The Timeline of the creation of drafts, which took 3 weeks until I ended up with my final iteration of the draft.<span class="shot-hint" aria-hidden="true"><span class="hint-click">Click</span><span class="hint-tap">Tap</span> image to enlarge</span></figcaption>
+          </figure>
         </div>
 
         <div class="step">
           <h3>2. Research</h3>
           <div class="weave weave--flip">
             <div class="weave-text">
-              <p>I researched why these levels work before deciding what to build.</p>
+              <p>Before I built anything in-engine I did some research to narrow down what exactly I would be creating.</p>
               <ul>
-                <li>I played Sunshine's secret courses, listed which obstacles appear in each, and ranked them from must have to won't have.</li>
+                <li>The very first thing I did was play through all the secret levels Super Mario Sunshine had to offer, and created a list of all the platforming obstacles I came across.</li>
+                <li>After I completed my list of obstacles, I created a MoSCoW chart, ranking the obstacles from must have to won't have.</li>
+                <li>Out of this chart, weighing my own skills and what seemed feasible to create, I selected the obstacles that I would recreate the behavior of within Unreal Engine, outlining them in red. All of this can be seen in the image on the left.</li>
               </ul>
             </div>
             <div class="weave-media">
-              <!-- Clear match on the old page: images/mario-breakdown.jpg (the secret levels broken into parts, ranked must have to won't have). -->
-              <figure class="slot" data-slot="must-have-chart" data-alt="Chart of every obstacle from the secret levels, sorted from must have to won't have, with the ones in the finished toolkit outlined in red">
-                <div class="slot-box" role="img" aria-label="Placeholder: must-have chart from Miro, with the red-outlined elements">Image slot: must-have chart from Miro, with the red-outlined elements</div>
-                <figcaption>Every obstacle from the secret levels, ranked. The red outlines are what the finished toolkit can recreate.</figcaption>
+              <figure class="slot shot">
+                <button type="button" class="shot-open" aria-label="Enlarge image: Chart of every obstacle from Super Mario Sunshine's secret levels, sorted into must have, should have, could have and won't have, with the chosen obstacles outlined in red"><img src="images/museum/moscow-chart.png" alt="Chart of every obstacle from Super Mario Sunshine's secret levels, sorted into must have, should have, could have and won't have, with the chosen obstacles outlined in red" loading="lazy" onerror="shotMissing(this)"></button>
+                <div class="slot-box">Image coming soon: images/museum/moscow-chart.png</div>
+                <figcaption>Every obstacle found within Super Mario Sunshine, ranked on importance for having within the project, with the chosen obstacles outlined in red.</figcaption>
               </figure>
             </div>
           </div>
@@ -645,25 +677,15 @@
                   </ul>
                 </li>
               </ul>
-            </div>
-            <div class="weave-media">
-              <figure class="slot" data-slot="secret-level-comparison" data-alt="Table comparing Super Mario Sunshine, A Hat in Time and Penny's Big Breakaway: whether their challenge levels are mandatory or optional, and how frustrating players found them">
-                <div class="slot-box" role="img" aria-label="Placeholder: small table comparing mandatory vs optional secret levels across the three games">Image slot: small table comparing mandatory vs optional secret levels across the three games</div>
-                <figcaption>How each game handles its challenge levels, and why optional levels caused less frustration.</figcaption>
-              </figure>
-            </div>
-          </div>
-
-          <div class="weave weave--flip">
-            <div class="weave-text">
-              <ul>
+              <ul class="list-gap">
                 <li>A Hat in Time's modding tools give beginners a Time Rift template to start from. That inspired me to build a similar starting point for Unreal Engine 5 beginners.</li>
               </ul>
             </div>
             <div class="weave-media">
-              <figure class="slot" data-slot="pattern-analysis" data-alt="Cropped screenshot of the pattern analysis, or of the A Hat in Time modding template">
-                <div class="slot-box" role="img" aria-label="Placeholder: cropped screenshot of the pattern analysis, or the A Hat in Time modding template">Image slot: cropped screenshot of the pattern analysis, or the A Hat in Time modding template</div>
-                <figcaption><span class="todo">[FILL IN: one line on what the reader is looking at]</span></figcaption>
+              <figure class="slot shot">
+                <button type="button" class="shot-open" aria-label="Enlarge image: Pattern analysis page for the pattern Avoiding the main objective, just for a while, with two screenshots, the design problem, a description and the games that use it"><img src="images/museum/pattern-analysis-page.png" alt="Pattern analysis page for the pattern Avoiding the main objective, just for a while, with two screenshots, the design problem, a description and the games that use it" loading="lazy" onerror="shotMissing(this)"></button>
+                <div class="slot-box">Image coming soon: images/museum/pattern-analysis-page.png</div>
+                <figcaption>The pattern I ended up formatting following the method from Christopher Barney's Pattern Language for Game Design book.</figcaption>
               </figure>
             </div>
           </div>
@@ -671,7 +693,7 @@
 
         <div class="step">
           <h3>3. Choosing the technical approach</h3>
-          <div class="weave">
+          <div class="weave weave--flip">
             <div class="weave-text">
               <p>I tested three ways to build a rotating platform:</p>
               <ul>
@@ -680,10 +702,21 @@
                 <li><strong>Target points</strong> (markers you place in the level): moved a mesh between two points, but placing the points was too fiddly for a beginner tool.</li>
               </ul>
             </div>
-            <div class="weave-media">
-              <figure class="slot" data-slot="tech-experiments" data-alt="Three small clips of a rotating platform, built with Timelines, with an actor component and with target points">
-                <div class="slot-box" role="img" aria-label="Placeholder: three small screenshots or GIFs, one per experiment">Image slot: three small screenshots or GIFs, one per experiment</div>
-                <figcaption>The three experiments. Only the middle one (actor components) made it into the toolkit.</figcaption>
+            <div class="weave-media shot-trio">
+              <figure class="slot shot">
+                <button type="button" class="shot-open" aria-label="Enlarge image: Blueprint graph of the rotating platform built with a Timeline"><img src="images/museum/engine-timeline-blueprint.png" alt="Blueprint graph of the rotating platform built with a Timeline" loading="lazy" onerror="shotMissing(this)"></button>
+                <div class="slot-box">Image coming soon: images/museum/engine-timeline-blueprint.png</div>
+                <figcaption>Timelines</figcaption>
+              </figure>
+              <figure class="slot shot">
+                <button type="button" class="shot-open" aria-label="Enlarge image: Blueprint graph of the rotating platform built as a custom actor component"><img src="images/museum/engine-actor-component-blueprint.png" alt="Blueprint graph of the rotating platform built as a custom actor component" loading="lazy" onerror="shotMissing(this)"></button>
+                <div class="slot-box">Image coming soon: images/museum/engine-actor-component-blueprint.png</div>
+                <figcaption>Custom actor component</figcaption>
+              </figure>
+              <figure class="slot shot">
+                <button type="button" class="shot-open" aria-label="Enlarge image: Two target point markers placed in an empty Unreal Engine level"><img src="images/museum/engine-target-points.png" alt="Two target point markers placed in an empty Unreal Engine level" loading="lazy" onerror="shotMissing(this)"></button>
+                <div class="slot-box">Image coming soon: images/museum/engine-target-points.png</div>
+                <figcaption>Target points</figcaption>
               </figure>
             </div>
           </div>
@@ -691,88 +724,54 @@
 
         <div class="step">
           <h3>4. Planning</h3>
-          <div class="weave weave--flip">
-            <div class="weave-text">
-              <ul>
-                <li>I painted over reference footage to define each core behavior: its direction, rotation axes and states. These became my plan for building each one.</li>
-                <li>I started the Conditions of Satisfaction document (a list of what the finished toolkit has to do) in week 4 and updated it every week.</li>
-                <li>The scope grew from research. A Hat in Time's balloons led to the bouncing platform. <span class="todo">[CHECK: alternating platforms became a setting on the disappearing platform, and rotation sequences became rotation points on the spline platform. Is that right?]</span></li>
-              </ul>
-            </div>
-            <div class="weave-media">
-              <!-- Clear match on the old page: images/mario-paintovers.jpg (paint-overs of the five main behaviors). -->
-              <figure class="slot" data-slot="paint-overs" data-alt="Five reference screenshots painted over with arrows showing movement direction, rotation axes and states">
-                <div class="slot-box" role="img" aria-label="Placeholder: the five paint-overs">Image slot: the five paint-overs</div>
-                <figcaption>A paint-over becomes a component. Arrows show movement direction and rotation axes.</figcaption>
-              </figure>
-            </div>
-          </div>
+          <p>Before I went in-engine, I made paint-overs of the core 5 behaviors that I would be recreating. Four out of the five behaviors were taken from Super Mario Sunshine, while one behavior (the bouncing platform behavior) was taken from both Super Mario Sunshine as well as A Hat in Time (the Balloon Bounce Variant).</p>
+          <figure class="slot shot shot--hint">
+            <button type="button" class="shot-open" aria-label="Enlarge image: Five paint-overs of reference screenshots, one per core behavior, with arrows and notes showing movement, rotation and states"><img src="images/museum/paint-overs.png" alt="Five paint-overs of reference screenshots, one per core behavior, with arrows and notes showing movement, rotation and states" loading="lazy" onerror="shotMissing(this)"></button>
+            <div class="slot-box">Image coming soon: images/museum/paint-overs.png</div>
+            <figcaption>The five paint-overs representing each of the five behaviors: Simple Movement, Simple Rotation, Disappearing Platforms, Bouncing Platforms &amp; the Rotating Spline behavior.<span class="shot-hint" aria-hidden="true"><span class="hint-click">Click</span><span class="hint-tap">Tap</span> image to enlarge</span></figcaption>
+          </figure>
         </div>
 
         <div class="step">
           <h3>5. Building and solving problems</h3>
-          <div class="weave">
-            <div class="weave-text">
-              <ul>
-                <li><strong>Spline rotation:</strong> a cube riding the spline turned diagonally on its second rotation. The rotation was blending the long way round. Enabling Shortest Path (a setting that makes it turn the short way) fixed it.</li>
-                <li><strong>Cube fade:</strong> on a six-sided cube with six materials, only one face faded. I solved it with a Sequence node (a Blueprint block that runs several steps one after another) and six parallel branches, one per material.</li>
-                <li><strong>Coin system:</strong> regular coins link themselves to the end collectable, which counts them and shows a counter. When collection is required, the coins turn red and the end collectable only appears once all are collected.</li>
-              </ul>
-            </div>
-            <div class="weave-media">
-              <figure class="slot" data-slot="spline-fix" data-alt="Two clips of a cube on a spline path: before the fix it turns diagonally, after the fix it turns straight">
-                <div class="slot-box" role="img" aria-label="Placeholder: before and after GIFs of the spline platform turning">Image slot: before and after GIFs of the spline platform turning</div>
-                <figcaption>Before the fix (diagonal turn) and after (straight turn).</figcaption>
-              </figure>
-            </div>
-          </div>
-
-          <div class="weave weave--flip">
-            <div class="weave-text">
-              <ul>
-                <li><strong>Designed for beginners:</strong> settings use dropdowns with working defaults, editor guides show what each setting does, and Blueprint comments are color-coded by purpose.</li>
-              </ul>
-            </div>
-            <div class="weave-media">
-              <figure class="slot" data-slot="editor-guides" data-alt="A spline path with green, cyan and red spheres marking its points, next to the settings panel with dropdown menus">
-                <div class="slot-box" role="img" aria-label="Placeholder: the editor guides and the settings panel">Image slot: the editor guides and the settings panel</div>
-                <figcaption>The colored spheres on the spline show what each point does (green pauses, cyan rotates, red marks the start and end). The settings panel uses plain dropdowns.</figcaption>
-              </figure>
-              <figure class="slot" data-slot="blueprint-comments" data-alt="A Blueprint graph with its comment boxes colored red, yellow, green, blue and gray">
-                <div class="slot-box" role="img" aria-label="Placeholder: Blueprint screenshot with color-coded comments">Image slot: Blueprint screenshot with color-coded comments</div>
-                <figcaption>Red is core logic, yellow is debug drawing, green is calculations, blue is widgets (on-screen menus and counters), gray is nested notes.</figcaption>
-              </figure>
-            </div>
+          <ul>
+            <li><strong>Spline rotation:</strong> a cube riding the spline turned diagonally on its second rotation. The rotation was blending the long way round. Enabling Shortest Path (a setting that makes it turn the short way) fixed it.</li>
+            <li><strong>Cube fade:</strong> on a six-sided cube with six materials, only one face faded. I solved it with a Sequence node (a Blueprint block that runs several steps one after another) and six parallel branches, one per material.</li>
+            <li><strong>Coin system:</strong> regular coins link themselves to the end collectable, which counts them and shows a counter. When collection is required, the coins turn red and the end collectable only appears once all are collected.</li>
+            <li><strong>Designed for beginners:</strong> settings use dropdowns with working defaults, editor guides show what each setting does, and Blueprint comments are color-coded by purpose.</li>
+          </ul>
+          <div class="shot-pair">
+            <figure class="slot shot">
+              <button type="button" class="shot-open" aria-label="Enlarge image: Settings panels of the Simple Movement and Simple Rotation components, with dropdown menus for axis and direction and number fields for distance, speed and pause"><img src="images/museum/settings-dropdowns.png" alt="Settings panels of the Simple Movement and Simple Rotation components, with dropdown menus for axis and direction and number fields for distance, speed and pause" loading="lazy" onerror="shotMissing(this)"></button>
+              <div class="slot-box">Image coming soon: images/museum/settings-dropdowns.png</div>
+              <figcaption>The Settings with dropdown menus of Simple Movement &amp; Simple Rotation as examples</figcaption>
+            </figure>
+            <figure class="slot shot">
+              <button type="button" class="shot-open" aria-label="Enlarge image: The toolkit's Blueprint comment colors with an explanation: red for core logic, yellow for debug drawing, green for calculations, blue for widget logic and gray for a comment within a comment"><img src="images/museum/comment-color-coding.png" alt="The toolkit's Blueprint comment colors with an explanation: red for core logic, yellow for debug drawing, green for calculations, blue for widget logic and gray for a comment within a comment" loading="lazy" onerror="shotMissing(this)"></button>
+              <div class="slot-box">Image coming soon: images/museum/comment-color-coding.png</div>
+              <figcaption>The Color Coding of the code within the project with clear explanation underneath for users to guide them through the project</figcaption>
+            </figure>
           </div>
         </div>
 
         <div class="step">
           <h3>6. Playtesting</h3>
-          <div class="weave">
-            <div class="weave-text">
-              <p>At Play Day (a playtest day at school) my lecturer played the demo level and gave four points: make the blocks colorful, add floors under the harder sections, add collectables, and add annotations. I turned them into two iterations.</p>
-            </div>
-            <div class="weave-media">
-              <!-- Possible match on the old page: images/mario-iteration-1.jpg and images/mario-iteration-2.jpg (layout iterations annotated with the feedback). -->
-              <figure class="slot" data-slot="playtest-feedback" data-alt="Feedback notes from Play Day next to the changes made in response">
-                <div class="slot-box" role="img" aria-label="Placeholder: Miro feedback notes or a layout iteration screenshot">Image slot: Miro feedback notes or a layout iteration screenshot</div>
-                <figcaption>The feedback from Play Day and what I changed in response.</figcaption>
-              </figure>
-            </div>
-          </div>
-
           <div class="weave weave--flip">
             <div class="weave-text">
+              <p>At Play Day (a playtest day at school) my lecturer played the demo level and gave four points: make the blocks colorful, add floors under the harder sections, add collectables, and add annotations. I turned them into two iterations.</p>
               <ul>
                 <li><strong>Iteration 1:</strong> short explanations at the resting points, an extra resting point, and the coin system. <span class="todo">[CHECK: confirm the order against Miro]</span></li>
                 <li><strong>Iteration 2:</strong> six color materials, a multicolored cube so rotation is easy to read, and floors under the hardest sections, because the demo should be a showcase, not a punishment.</li>
               </ul>
             </div>
             <div class="weave-media">
-              <!-- Possible match on the old page: images/mario-iteration-0.jpg (all-white layout) and images/mario-iteration-2.jpg (colored layout). -->
-              <figure class="slot" data-slot="playtest-before-after" data-alt="The demo level all white on the left, and colored with floors and signs on the right">
-                <div class="slot-box" role="img" aria-label="Placeholder: the all-white demo level next to the colored version">Image slot: the all-white demo level next to the colored version</div>
-                <figcaption>Before and after. <span class="todo">[FILL IN: point out the colors, floors and signs]</span></figcaption>
+              <figure class="slot shot">
+                <button type="button" class="shot-open" aria-label="Enlarge image: Demo level layout after iteration 1, in side view and top view, with the added red coins, explanation text and an extra resting spot marked"><img src="images/museum/playtest-iteration-1.png" alt="Demo level layout after iteration 1, in side view and top view, with the added red coins, explanation text and an extra resting spot marked" loading="lazy" onerror="shotMissing(this)"></button>
+                <div class="slot-box">Image coming soon: images/museum/playtest-iteration-1.png</div>
+              </figure>
+              <figure class="slot shot">
+                <button type="button" class="shot-open" aria-label="Enlarge image: Demo level layout after iteration 2, in side view and top view, with the multicolored cube and the floors under the difficult sections marked"><img src="images/museum/playtest-iteration-2.png" alt="Demo level layout after iteration 2, in side view and top view, with the multicolored cube and the floors under the difficult sections marked" loading="lazy" onerror="shotMissing(this)"></button>
+                <div class="slot-box">Image coming soon: images/museum/playtest-iteration-2.png</div>
               </figure>
             </div>
           </div>
@@ -785,9 +784,9 @@
               <p>I wrote a How-To so a beginner can install the toolkit and build a first level. It has a chapter for each element, a complete level setup guide, a section on adding new content, and troubleshooting. Claude drafted the template and most of the troubleshooting section. I rewrote the draft and verified the entries, and the document credits this at the end.</p>
             </div>
             <div class="weave-media">
-              <!-- Match on the old page: images/mario-howto.jpg (How-To table of contents and pages). That file is not in images/ yet. -->
-              <figure class="slot" data-slot="howto-pages" data-alt="The How-To document's table of contents next to one element chapter">
-                <div class="slot-box" role="img" aria-label="Placeholder: the How-To table of contents or a sample element page">Image slot: the How-To table of contents or a sample element page</div>
+              <figure class="slot shot">
+                <button type="button" class="shot-open" aria-label="Enlarge image: Table of contents of the How-To document, with a chapter for each of the eight elements, a level setup guide, a section on adding new content and troubleshooting"><img src="images/museum/howto-contents.png" alt="Table of contents of the How-To document, with a chapter for each of the eight elements, a level setup guide, a section on adding new content and troubleshooting" loading="lazy" onerror="shotMissing(this)"></button>
+                <div class="slot-box">Image coming soon: images/museum/howto-contents.png</div>
                 <figcaption>Each element has its own chapter, followed by a level setup guide.</figcaption>
               </figure>
             </div>
@@ -799,25 +798,15 @@
       <section class="part panel" id="takeaway" aria-labelledby="takeaway-title">
         <h2 id="takeaway-title"><span class="part-label">Part 3</span>The Take-aways</h2>
 
-        <div class="weave weave--flip">
-          <div class="weave-text">
-            <ul>
-              <li><strong>What I'm proud of:</strong> clarity. Editor guides, a clear settings panel, and tooltips and comments turn a lot of Blueprint work into a few minutes of setup. <span class="todo">[FILL IN: a real comparison, or soften this to "much less setup"]</span></li>
-              <li><strong>What I learned:</strong> clear comments and tooltips matter a lot for beginner-friendly tools, and they help me when I come back to old work.</li>
-              <li><strong>What I'd do differently:</strong> start using AI as a brainstorming partner earlier, since the first half of the block was a struggle until I started talking ideas through. I'd also experiment more before settling on a solution.</li>
-            </ul>
-          </div>
-          <div class="weave-media">
-            <!-- Possible match on the old page: images/mario-shot-1.gif to mario-shot-3.gif (screenshots of the demo level). Those files are not in images/ yet. -->
-            <figure class="slot" data-slot="finished-demo" data-alt="The finished, colored demo level being played">
-              <div class="slot-box" role="img" aria-label="Placeholder: finished demo level in action">Image slot: finished demo level in action</div>
-              <figcaption>The finished demo level.</figcaption>
-            </figure>
-          </div>
-        </div>
-
-        <!-- Already on the site: the How-To PDF is files/Mario-Toolkit-How-To.pdf, and the old page's gameplay video is https://www.youtube.com/watch?v=2UT7SS-zG0E -->
-        <p class="links-line"><strong>Links:</strong> <span class="todo">[FILL IN: showcase video]</span> / <span class="todo">[FILL IN: How-To document]</span> / <span class="todo">[FILL IN: itch page]</span></p>
+        <ul class="takeaways">
+          <li><strong>What I'm proud of:</strong> clarity. Editor guides, a clear settings panel, and tooltips and comments turn a lot of Blueprint work into a few minutes of setup. <span class="todo">[FILL IN: a real comparison, or soften this to "much less setup"]</span></li>
+          <li><strong>What I learned:</strong> clear comments and tooltips matter a lot for beginner-friendly tools, and they help me when I come back to old work.</li>
+          <li><strong>What I'd do differently:</strong> start using AI as a brainstorming partner earlier, since the first half of the block was a struggle until I started talking ideas through. I'd also experiment more before settling on a solution.</li>
+        </ul>
+        <figure class="slot shot shot--feature">
+          <button type="button" class="shot-open" aria-label="Enlarge image: The finished demo level in the sky, with colored platforms, a purple spinning platform and white pillars"><img src="images/museum/demo-level-final.png" alt="The finished demo level in the sky, with colored platforms, a purple spinning platform and white pillars" loading="lazy" onerror="shotMissing(this)"></button>
+          <div class="slot-box">Image coming soon: images/museum/demo-level-final.png</div>
+        </figure>
       </section>
 
       <p class="section-more"><a class="btn" href="projects.html">Back to projects</a></p>
@@ -830,6 +819,7 @@
   </button>
   <div class="lightbox-stage" id="el-lightbox-stage">
     <div class="lightbox-frame"><span class="media-note lightbox-note" hidden></span></div>
+    <img class="lightbox-picture" alt="">
     <div class="lightbox-ph"><strong class="lightbox-ph-name"></strong><span>Showcase video coming soon</span></div>
   </div>
   <p class="wide-hint lightbox-wide-hint">Swipe sideways to see the whole clip</p>
@@ -1105,7 +1095,7 @@
     function isNum(v) { return typeof v === 'number' && isFinite(v); }
     function play() { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
     function clipLabel(clip, c) { return clip.label || 'Clip ' + (c + 1); }   // labels come from ELEMENTS
-    function inLightbox() { return lightbox.open; }
+    function inLightbox() { return lightbox.open && !pictureFrom; }   // the museum clip is in the lightbox (not a content image)
     function srcFor(file) { return MEDIA_FOLDER + file + '#t=' + POSTER_TIME; }   // '#t=' makes browsers (also iOS Safari) draw the first frame
     var shapes = {};                  // each file's real shape, remembered once its metadata has loaded
     var openedOnce = false;           // until a drawer first opens, nothing is preloaded
@@ -1498,6 +1488,7 @@
 
     // ---------- Lightbox: the same video (and tabs) move into a full-screen dialog ----------
     function sizeLightboxVideo() {
+      if (pictureFrom) return;
       var hasTabs = !tablist.hidden;
       var wide = ratio > WIDE_RATIO;
       var scroll = wide && phone.matches && portrait.matches;   // phone in portrait: up to 70vh tall, scrolls sideways
@@ -1526,7 +1517,42 @@
       closeLightbox.focus();
       if (!showingImage && !reduce.matches) play();
     }
+    // ---------- Content images of the page: the same lightbox, showing a copy of the image ----------
+    var picture = lightbox.querySelector('.lightbox-picture');
+    var pictureFrom = null, savedLabels = null;
+    function openPicture(btn) {
+      var img = btn.querySelector('img');
+      if (!img || !img.naturalWidth || !lightbox.showModal || lightbox.open) return;
+      var r = img.naturalWidth / img.naturalHeight;
+      pictureFrom = btn;
+      savedLabels = [lightbox.getAttribute('aria-label'), closeLightbox.getAttribute('aria-label')];
+      picture.src = img.currentSrc || img.src;
+      picture.alt = img.alt;
+      picture.style.width = phone.matches ? 'min(100vw, calc(80vh * ' + r + '))' : 'min(90vw, calc(88vh * ' + r + '))';
+      lightbox.classList.add('is-picture');
+      lightbox.classList.toggle('is-landscape', r > 1);
+      lightbox.setAttribute('aria-label', 'Enlarged image: ' + img.alt);
+      closeLightbox.setAttribute('aria-label', 'Close enlarged image');
+      document.documentElement.classList.add('is-locked');
+      lightbox.showModal();
+      closeLightbox.focus();
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('.shot-open'), function (btn) {
+      btn.addEventListener('click', function () { openPicture(btn); });
+    });
+
     lightbox.addEventListener('close', function () {
+      if (pictureFrom) {                      // a content image: put everything back as it was, focus its image again
+        var from = pictureFrom;
+        pictureFrom = null;
+        lightbox.classList.remove('is-picture', 'is-landscape');
+        picture.removeAttribute('src');
+        lightbox.setAttribute('aria-label', savedLabels[0]);
+        closeLightbox.setAttribute('aria-label', savedLabels[1]);
+        document.documentElement.classList.remove('is-locked');
+        from.focus({ preventScroll: true });
+        return;
+      }
       var time = video.currentTime;
       media.insertBefore(video, placeholder);
       media.insertBefore(image, placeholder);
