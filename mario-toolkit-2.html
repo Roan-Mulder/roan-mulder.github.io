@@ -78,6 +78,11 @@
     .weave-text > :last-child { margin-bottom: 0; }
     .weave-media { display: grid; gap: 1.5rem; }
     .list-gap { margin-top: 2rem; }
+    /* Step 7: the How-To button, centered at the bottom of the Part 2 panel, close to its bottom edge */
+    .step--last { padding-bottom: 0; }
+    .howto-link { text-align: center; margin: 2rem 0 0; }
+    .theme-void .part:has(.howto-link) { padding-bottom: clamp(1.5rem, 2.5vw, 2rem); }
+    .btn--pill { border-radius: 999px; }
     .step li.gap-before { margin-top: 1.65em; }   /* one empty line above this bullet */
 
     /* ---------- Content images: click (or tap) to enlarge in the lightbox; a labelled grey box until the file is added ---------- */
@@ -816,7 +821,7 @@
           </div>
         </div>
 
-        <div class="step">
+        <div class="step step--last">
           <h3>7. Documenting it</h3>
           <div class="weave">
             <div class="weave-text">
@@ -830,6 +835,8 @@
               </figure>
             </div>
           </div>
+          <!-- The same button and link as on mario-toolkit.html, centered at the bottom of Part 2. The PDF there is the latest version (2.1). -->
+          <p class="howto-link"><a class="btn btn--pill" href="files/Mario-Toolkit-How-To.pdf" target="_blank" rel="noopener">Read the full How-To (PDF)</a></p>
         </div>
       </section>
 
