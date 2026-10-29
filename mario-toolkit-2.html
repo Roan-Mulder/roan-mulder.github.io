@@ -89,9 +89,20 @@
     .shot.is-missing .shot-open { display: none; }
     .shot--strip > .slot-box { aspect-ratio: 4 / 1; }      /* the two full-width strips (drafts timeline, paint-overs) */
     .shot--feature > .slot-box { aspect-ratio: 3 / 1; }
-    /* Step 3: the tall screenshot on the left, the other two stacked on its right */
-    .shot-trio { grid-template-columns: 1fr 1fr; gap: 1rem; align-items: center; }
-    .shot-trio > .shot:first-child { grid-row: span 2; }
+    /* Step 3: the tall screenshot on the left sets the height. On its right, the top of the first image lines up with its top
+       and the bottom of the second image with its bottom (the two shrink to fit, sharing the height by their own shapes).
+       The captions under the bottom edge hang below the images, in the space kept free under the grid. */
+    .shot-trio { grid-template-columns: 1fr 1fr; gap: 1rem; align-items: stretch; padding-bottom: calc(.9rem * 1.65 + 7px); }
+    .shot-trio > .shot, .trio-side > .shot:last-child { position: relative; }
+    .shot-trio > .shot > figcaption, .trio-side > .shot:last-child > figcaption { position: absolute; top: 100%; left: 0; right: 0; }
+    .trio-side { contain: size; display: flex; flex-direction: column; gap: 1rem; }
+    .trio-side > .shot { display: flex; flex-direction: column; min-height: 0; }
+    .trio-side > .shot:first-child { flex: .497 1 calc(.9rem * 1.65 + 7px); }   /* height / width of the timeline screenshot; the base size is its caption */
+    .trio-side > .shot:last-child { flex: .661 1 0; }    /* height / width of the target points screenshot */
+    .trio-side .shot-open { display: flex; justify-content: center; align-items: flex-start; flex: 1 1 0; min-height: 0; }
+    .trio-side > .shot:last-child .shot-open { align-items: flex-end; }
+    .trio-side .shot-open img { width: auto; height: auto; max-width: 100%; max-height: 100%; }
+    .trio-side .slot-box { flex: 1 1 0; min-height: 0; aspect-ratio: auto; }
     /* Step 6: images on the left (image and caption on rows of their own), each iteration bullet centered on its image.
        The middle row of the first text cell holds the bullet; the Play Day paragraph sits at the bottom of the row above it. */
     .playtest { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto 2.25rem auto auto; column-gap: 3rem; margin: 1.5rem 0; }   /* the 2.25rem row is the space between the two images */
@@ -297,8 +308,12 @@
     .lightbox-stage.is-scroll ~ .lightbox-wide-hint { display: block; }
 
     @media (max-width: 640px) {
-      .shot-trio { grid-template-columns: 1fr; }
-      .shot-trio > .shot:first-child { grid-row: auto; }
+      .shot-trio { grid-template-columns: 1fr; padding-bottom: 0; }   /* phones: the three stack, each with its caption under it */
+      .trio-side { contain: none; display: grid; gap: 1.5rem; }
+      .trio-side > .shot, .trio-side .shot-open { display: block; }
+      .trio-side .shot-open img { width: 100%; max-height: none; }
+      .trio-side .slot-box { aspect-ratio: 16 / 10; }
+      .shot-trio > .shot > figcaption, .trio-side > .shot:last-child > figcaption { position: static; }
       .desk { padding: 1.1rem 1rem 1.3rem; }
       .desk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .desk-grid > .el-btn:last-of-type:nth-of-type(odd) { grid-column: 1 / -1; }
@@ -721,16 +736,18 @@
                 <div class="slot-box">Image coming soon: images/museum/engine-actor-component-blueprint.png</div>
                 <figcaption>Custom actor component</figcaption>
               </figure>
-              <figure class="slot shot">
-                <button type="button" class="shot-open" aria-label="Enlarge image: Blueprint graph of the rotating platform built with a Timeline"><img src="images/museum/engine-timeline-blueprint.png" alt="Blueprint graph of the rotating platform built with a Timeline" loading="lazy" onerror="shotMissing(this)"></button>
-                <div class="slot-box">Image coming soon: images/museum/engine-timeline-blueprint.png</div>
-                <figcaption>Timelines</figcaption>
-              </figure>
-              <figure class="slot shot">
-                <button type="button" class="shot-open" aria-label="Enlarge image: Two target point markers placed in an empty Unreal Engine level"><img src="images/museum/engine-target-points.png" alt="Two target point markers placed in an empty Unreal Engine level" loading="lazy" onerror="shotMissing(this)"></button>
-                <div class="slot-box">Image coming soon: images/museum/engine-target-points.png</div>
-                <figcaption>Target points</figcaption>
-              </figure>
+              <div class="trio-side">
+                <figure class="slot shot">
+                  <button type="button" class="shot-open" aria-label="Enlarge image: Blueprint graph of the rotating platform built with a Timeline"><img src="images/museum/engine-timeline-blueprint.png" alt="Blueprint graph of the rotating platform built with a Timeline" loading="lazy" onerror="shotMissing(this)"></button>
+                  <div class="slot-box">Image coming soon: images/museum/engine-timeline-blueprint.png</div>
+                  <figcaption>Timelines</figcaption>
+                </figure>
+                <figure class="slot shot">
+                  <button type="button" class="shot-open" aria-label="Enlarge image: Two target point markers placed in an empty Unreal Engine level"><img src="images/museum/engine-target-points.png" alt="Two target point markers placed in an empty Unreal Engine level" loading="lazy" onerror="shotMissing(this)"></button>
+                  <div class="slot-box">Image coming soon: images/museum/engine-target-points.png</div>
+                  <figcaption>Target points</figcaption>
+                </figure>
+              </div>
             </div>
           </div>
         </div>
