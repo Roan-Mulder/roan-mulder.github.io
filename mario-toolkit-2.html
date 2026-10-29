@@ -92,8 +92,20 @@
     /* Step 3: the tall screenshot on the left, the other two stacked on its right */
     .shot-trio { grid-template-columns: 1fr 1fr; gap: 1rem; align-items: center; }
     .shot-trio > .shot:first-child { grid-row: span 2; }
-    /* Step 6: the two iteration images, a little more space between them for their captions */
-    .shot-stack { gap: 2.25rem; }
+    /* Step 6: images on the left (image and caption on rows of their own), each iteration bullet centered on its image.
+       The middle row of the first text cell holds the bullet; the Play Day paragraph sits at the bottom of the row above it. */
+    .playtest { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto 2.25rem auto auto; column-gap: 3rem; margin: 1.5rem 0; }   /* the 2.25rem row is the space between the two images */
+    .playtest > .shot { grid-column: 1; grid-row: 1 / span 2; display: grid; grid-template-rows: subgrid; }
+    .playtest > .shot + .playtest-text + .shot { grid-row: 4 / span 2; }
+    .playtest > .shot > * { grid-column: 1; grid-row: 1; }
+    .playtest > .shot > figcaption { grid-row: 2; }
+    .playtest-text { grid-column: 2; }
+    .playtest-text ul { margin: 0; }
+    .playtest-text li:last-child { margin-bottom: 0; }
+    .playtest-text--1 { grid-row: 1; display: grid; grid-template-rows: 1fr auto 1fr; }
+    .playtest-text--1 > p { align-self: end; }
+    .playtest-text--1 > ul { grid-row: 2; }
+    .playtest-text--2 { grid-row: 4; align-self: center; }
     /* Step 5: two screenshots side by side */
     .shot-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; margin-top: 1.5rem; }
     /* Part 3: three take-aways side by side, the finished demo level below */
@@ -325,6 +337,12 @@
       .p2-intro, .weave { grid-template-columns: 1fr; gap: 1.5rem; }
       .weave > .weave-media { order: -1; }   /* stacked: the image always comes first */
       .shot-pair, .part .takeaways { grid-template-columns: 1fr; gap: 1.5rem; }
+      .playtest { grid-template-columns: 1fr; grid-template-rows: none; }   /* stacked: image 1, its text, image 2, its text */
+      .playtest > .shot, .playtest > .shot + .playtest-text + .shot, .playtest-text { grid-column: 1; grid-row: auto; }
+      .playtest > .shot, .playtest > .shot + .playtest-text + .shot { grid-row: span 2; }
+      .playtest > .shot + .playtest-text + .shot { margin-top: 2.25rem; }
+      .playtest-text { margin-top: 1.5rem; }
+      .playtest-text--1 { display: block; }
       .part { padding-top: 3rem; }
       .overview ol { padding: 6px; gap: .3rem; }
       .overview a { padding: .4rem .55rem; font-size: .8rem; }   /* smaller padding first; wraps only if it still does not fit */
@@ -751,25 +769,28 @@
 
         <div class="step">
           <h3>6. Playtesting</h3>
-          <div class="weave weave--flip">
-            <div class="weave-text">
+          <!-- Each iteration bullet is centered on its own image; the Play Day paragraph sits right above the first bullet -->
+          <div class="playtest">
+            <figure class="slot shot">
+              <button type="button" class="shot-open" aria-label="Enlarge image: Demo level layout after iteration 1, in side view and top view, with the added red coins, explanation text and an extra resting spot marked"><img src="images/museum/playtest-iteration-1.png" alt="Demo level layout after iteration 1, in side view and top view, with the added red coins, explanation text and an extra resting spot marked" loading="lazy" onerror="shotMissing(this)"></button>
+              <div class="slot-box">Image coming soon: images/museum/playtest-iteration-1.png</div>
+              <figcaption>This iteration focused on adding guiding coins and more explanation for the player explaining each section</figcaption>
+            </figure>
+            <div class="playtest-text playtest-text--1">
               <p>At Play Day (a playtest day at school) my lecturer played the demo level and gave four points: make the blocks colorful, add floors under the harder sections, add collectables, and add annotations. I turned them into two iterations.</p>
               <ul>
-                <li><strong>Iteration 1:</strong> short explanations at the resting points, an extra resting point, and the coin system. <span class="todo">[CHECK: confirm the order against Miro]</span></li>
-                <li><strong>Iteration 2:</strong> six color materials, a multicolored cube so rotation is easy to read, and floors under the hardest sections, because the demo should be a showcase, not a punishment.</li>
+                <li><strong>Iteration 1:</strong> short explanations at the resting points, an extra resting point, and the coin system.</li>
               </ul>
             </div>
-            <div class="weave-media shot-stack">
-              <figure class="slot shot">
-                <button type="button" class="shot-open" aria-label="Enlarge image: Demo level layout after iteration 1, in side view and top view, with the added red coins, explanation text and an extra resting spot marked"><img src="images/museum/playtest-iteration-1.png" alt="Demo level layout after iteration 1, in side view and top view, with the added red coins, explanation text and an extra resting spot marked" loading="lazy" onerror="shotMissing(this)"></button>
-                <div class="slot-box">Image coming soon: images/museum/playtest-iteration-1.png</div>
-                <figcaption>This iteration focused on adding guiding coins and more explanation for the player explaining each section</figcaption>
-              </figure>
-              <figure class="slot shot">
-                <button type="button" class="shot-open" aria-label="Enlarge image: Demo level layout after iteration 2, in side view and top view, with the multicolored cube and the floors under the difficult sections marked"><img src="images/museum/playtest-iteration-2.png" alt="Demo level layout after iteration 2, in side view and top view, with the multicolored cube and the floors under the difficult sections marked" loading="lazy" onerror="shotMissing(this)"></button>
-                <div class="slot-box">Image coming soon: images/museum/playtest-iteration-2.png</div>
-                <figcaption>This iteration focused on adding color to the level for visibility and added floors to make the level less difficult.</figcaption>
-              </figure>
+            <figure class="slot shot">
+              <button type="button" class="shot-open" aria-label="Enlarge image: Demo level layout after iteration 2, in side view and top view, with the multicolored cube and the floors under the difficult sections marked"><img src="images/museum/playtest-iteration-2.png" alt="Demo level layout after iteration 2, in side view and top view, with the multicolored cube and the floors under the difficult sections marked" loading="lazy" onerror="shotMissing(this)"></button>
+              <div class="slot-box">Image coming soon: images/museum/playtest-iteration-2.png</div>
+              <figcaption>This iteration focused on adding color to the level for visibility and added floors to make the level less difficult.</figcaption>
+            </figure>
+            <div class="playtest-text playtest-text--2">
+              <ul>
+                <li><strong>Iteration 2:</strong> six color materials, a multicolored cube so rotation is easy to read, and floors under the hardest sections, because the demo should be a showcase, not a punishment.</li>
+              </ul>
             </div>
           </div>
         </div>
