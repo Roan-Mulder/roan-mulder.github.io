@@ -116,7 +116,8 @@
     .playtest-text--1 { grid-row: 1; align-self: center; }
     .playtest-text--2 { grid-row: 4; align-self: center; }
     /* Step 5: two screenshots side by side */
-    .shot-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; margin-top: 1.5rem; }
+    /* The columns share the width in the ratio of the two image widths (586 and 611 px), so both images end up the same height */
+    .shot-pair { display: grid; grid-template-columns: minmax(0, 586fr) minmax(0, 611fr); gap: 3rem; align-items: start; margin-top: 1.5rem; }
     /* Part 3: three take-aways side by side, the finished demo level below */
     .part .takeaways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem; padding-left: 1.2rem; margin: 0; }
     .slot.shot--feature { max-width: 56rem; margin: 2.5rem auto 0; }
