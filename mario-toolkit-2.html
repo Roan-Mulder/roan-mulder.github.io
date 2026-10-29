@@ -150,7 +150,13 @@
     .drawer .drawer-list li:last-child { margin-bottom: 0; }
     .drawer-clipbox { grid-area: media; min-width: 0; }
     .drawer-strip { border-radius: .8rem; }
-    .drawer-media { position: relative; aspect-ratio: 16 / 9; border-radius: .8rem; overflow: hidden; background: #d3dadd; }
+    /* 4:3 is the shape of the museum clips, so the box already has its final shape before the first frame appears */
+    .drawer-media { position: relative; aspect-ratio: 4 / 3; border-radius: .8rem; overflow: hidden; background: #d3dadd; }
+    .drawer-media.is-slow::after {
+      content: ""; position: absolute; top: 50%; left: 50%; width: 28px; height: 28px; margin: -14px 0 0 -14px; border-radius: 50%;
+      border: 3px solid rgba(63, 106, 143, .25); border-top-color: #3f6a8f; animation: media-spin .8s linear infinite;
+    }
+    @keyframes media-spin { to { transform: rotate(360deg); } }
     /* The box takes the video's own shape once it loads (see the script), so nothing is cropped */
     .drawer-video { display: block; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .2s; }
     .drawer-media.is-ready .drawer-video { opacity: 1; cursor: zoom-in; }
@@ -245,6 +251,7 @@
     }
     @media (prefers-reduced-motion: reduce) {
       .drawer, .drawer.is-open, .drawer-body, .drawer-head, .el-btn, .el-chev, .drawer-video { transition: none !important; }
+      .drawer-media.is-slow::after { animation: none; }
     }
 
     @media (max-width: 860px) {
@@ -390,6 +397,8 @@
     .theme-void .drawer .clip-tab[aria-selected="true"] { color: var(--btn-ink); background: var(--btn-blue); border-color: var(--btn-blue-deep); box-shadow: inset 0 0 0 1px var(--btn-blue-deep); }
     .theme-void .drawer .clip-tab[aria-selected="true"]:focus-visible { box-shadow: 0 0 0 2px #fff, inset 0 0 0 1px var(--btn-blue-deep); }
 
+    .theme-void .drawer-media { background: var(--btn-blue-tint); }   /* light blue while the first frame loads */
+    .theme-void .drawer-media.is-missing { background: #d3dadd; }
     .theme-void .drawer-expand { background: rgba(20, 35, 47, .75); }
     .theme-void .drawer-expand:hover { background: var(--btn-ink); }
 
@@ -839,12 +848,13 @@
      clips: one or more videos. With two or more, tabs appear under the video.
             (Not used in a shared group: those elements use the group's clips instead.)
        label      the clip button text (needed when an element has two or more clips).
-       file       the video inside MEDIA_FOLDER. The poster image has the same name, ending in .jpg.
+       file       the video inside MEDIA_FOLDER. Its first frame is used as the preview (no separate image files).
        mobileFile (optional) a smaller copy of the same video, used on phones (640px wide and narrower).
        start, end (optional) seconds. When both are set, only that part of the video loops.
      If you change a name or description, also update the no-JavaScript lists in Part 1.
      ========================================================== */
   var MEDIA_FOLDER = 'images/museum/';
+  var POSTER_TIME = 0.001;            // seconds: the preview is the video's own first frame (src ends in #t=0.001)
   var WIDE_RATIO = 2.4;               // clips wider than 2.4:1 count as "wide"
   var ELEMENTS = [
     { group: 'core', name: 'Simple movement', text: 'Moves any object back and forth along a straight line.',
@@ -929,6 +939,16 @@
     function play() { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
     function clipLabel(clip, c) { return clip.label || 'Clip ' + (c + 1); }   // labels come from ELEMENTS
     function inLightbox() { return lightbox.open; }
+    function srcFor(file) { return MEDIA_FOLDER + file + '#t=' + POSTER_TIME; }   // '#t=' makes browsers (also iOS Safari) draw the first frame
+    var shapes = {};                  // each file's real shape, remembered once its metadata has loaded
+    var openedOnce = false;           // until a drawer first opens, nothing is preloaded
+    var slowTimer = null;
+    function armSlow() {              // a spinner only when loading takes longer than about 500ms
+      clearTimeout(slowTimer);
+      media.classList.remove('is-slow');
+      slowTimer = setTimeout(function () { if (!media.classList.contains('is-ready') && !media.classList.contains('is-missing')) media.classList.add('is-slow'); }, 500);
+    }
+    function loaded() { clearTimeout(slowTimer); media.classList.remove('is-slow'); }
     function shared(i) { return !!GROUPS[ELEMENTS[i].group].shared; }
     function clipsOf(i) { return shared(i) ? GROUPS[ELEMENTS[i].group].clips : ELEMENTS[i].clips; }
     function titleOf(i) { return shared(i) ? GROUPS[ELEMENTS[i].group].name : ELEMENTS[i].name; }
@@ -1140,29 +1160,33 @@
       loadedFile = clip.file;
       media.classList.remove('is-ready', 'is-missing');
       lightbox.classList.remove('is-missing');
-      media.style.aspectRatio = '';                     // back to 16:9 until the new video says its shape
-      setShape(16 / 9);
+      loaded();
+      var known = shapes[clip.file];                    // the shape it will have, so nothing jumps when the first frame appears
+      media.style.aspectRatio = known ? known.w + ' / ' + known.h : '';
+      setShape(known ? known.w / known.h : 4 / 3);
       if (!inLightbox()) setEnlargeable(false);
       video.pause();
-      video.preload = 'none';
+      video.preload = openedOnce ? 'metadata' : 'none';
       triedFull = !(phone.matches && clip.mobileFile);
-      video.poster = MEDIA_FOLDER + clip.file.replace(/\.mp4$/i, '.jpg');
-      video.src = MEDIA_FOLDER + (triedFull ? clip.file : clip.mobileFile);
+      video.src = srcFor(triedFull ? clip.file : clip.mobileFile);
       needsLoad = true;
       if (playNow) startVideo();
     }
     function startVideo() {
-      video.controls = reduce.matches || inLightbox();   // reduced motion: poster and native controls, no autoplay
+      video.controls = reduce.matches || inLightbox();   // reduced motion: first frame and native controls, no autoplay
       video.autoplay = !reduce.matches;
+      openedOnce = true;
       if (needsLoad) {
         needsLoad = false;
         video.preload = reduce.matches ? 'metadata' : 'auto';
         video.load();
       }
+      if (!media.classList.contains('is-ready')) armSlow();
       if (!reduce.matches) play();
     }
     video.addEventListener('loadedmetadata', function () {
       if (video.videoWidth && video.videoHeight) {
+        shapes[loadedFile] = { w: video.videoWidth, h: video.videoHeight };
         media.style.aspectRatio = video.videoWidth + ' / ' + video.videoHeight;
         setShape(video.videoWidth / video.videoHeight);
       }
@@ -1172,16 +1196,17 @@
     video.addEventListener('timeupdate', function () {
       if (segEnd !== null && video.currentTime >= segEnd) video.currentTime = segStart;   // loop only the segment
     });
-    video.addEventListener('loadeddata', function () { media.classList.add('is-ready'); setEnlargeable(!!lightbox.showModal); });
+    video.addEventListener('loadeddata', function () { loaded(); media.classList.add('is-ready'); setEnlargeable(!!lightbox.showModal); });
     video.addEventListener('error', function () {
       if (!video.getAttribute('src')) return;
       if (!triedFull) {                                 // the mobile copy failed: try the full video before giving up
         triedFull = true;
-        video.src = MEDIA_FOLDER + clipsOf(current)[currentClip].file;
+        video.src = srcFor(clipsOf(current)[currentClip].file);
         needsLoad = true;
         startVideo();
         return;
       }
+      loaded();
       media.classList.add('is-missing');                // missing or broken file: show the grey placeholder
       lightbox.classList.add('is-missing');
       setEnlargeable(false);
