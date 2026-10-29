@@ -893,6 +893,8 @@
                   For an image: a .png or .jpg (if the .png is missing, the .jpg with the same name is tried).
        alt        (optional, images) the image description for screen readers. Without it, the label is used.
        note       (optional) a small notice on the video's top-left corner, for example "Video sped up 2x".
+       description, details (optional) text for this clip only, shown instead of the element's text and details
+                  while this clip is selected. Without them, the element's own text is used.
        mobileFile (optional) a smaller copy of the same video, used on phones (640px wide and narrower).
        start, end (optional) seconds. When both are set, only that part of the video loops.
      If you change a name or description, also update the no-JavaScript lists in Part 1.
@@ -931,48 +933,63 @@
       { label: 'Simple rotation', file: 'museum-simple-rotation.mp4' },
       { label: 'Combined with movement', file: 'museum-movement-rotation-combined.mp4' }
     ] },
-    { group: 'core', name: 'Disappearing platform', text: 'Makes a platform vanish and come back, on a timer or when the player steps on it.',
-      // DRAFT: rewrite me
-      details: {
-        steps: [
-          'Drag a mesh into your level and add the Disappearing Platform component.',
-          'Choose what triggers it: a timer, or the player touching it.',
-          'Set how long the platform stays and how long it is gone.'
-        ],
-        options: [
-          'What triggers it',
-          'How long it is visible',
-          'How long it is gone',
-          'Reverse the pattern, so neighboring platforms take turns'
-        ],
-        notes: [
-          'For alternating platforms, give both platforms the same timing values.'
-        ]
-      },
-      clips: [
-      { label: 'Disappearing platform', file: 'museum-disappearing-platform.mp4' },
-      { label: 'Alternating platforms', file: 'museum-alternating-platforms.mp4' }
+    { group: 'core', name: 'Disappearing platform', text: 'Makes a platform vanish and come back, on a timer or when the player steps on it.', clips: [
+      { label: 'Disappearing platform', file: 'museum-disappearing-platform.mp4',
+        // DRAFT: rewrite me
+        description: 'Makes a platform vanish and come back, on a timer or when the player steps on it.',
+        details: {
+          steps: [
+            'Drag a mesh into your level and add the Disappearing Platform component.',
+            'Choose what triggers it: a timer, or the player touching it.',
+            'Set how long it stays and how long it is gone.'
+          ],
+          options: [
+            'What triggers it',
+            'How long it is visible',
+            'How long it is gone'
+          ]
+        } },
+      { label: 'Alternating platforms', file: 'museum-alternating-platforms.mp4',
+        // DRAFT: rewrite me
+        description: 'Neighboring platforms that take turns appearing and disappearing.',
+        details: {
+          steps: [
+            'Place two platforms with the Disappearing Platform component.',
+            'Reverse the pattern on one of them.',
+            'Give both the same timing values.'
+          ],
+          notes: [
+            'Matching timing values keep the two platforms in step.'
+          ]
+        } }
     ] },
-    { group: 'core', name: 'Bouncing platform', text: 'Launches the player: a trampoline bounce, or a balloon that pops and sends them in an arc.',
-      // DRAFT: rewrite me
-      details: {
-        steps: [
-          'Drag a mesh into your level and add the Bouncing Platform component.',
-          'Choose the type: Simple Bounce or Balloon Bounce.',
-          'Set the direction, distance and height of the launch.'
-        ],
-        options: [
-          'Which bounce type',
-          'How far and how high it launches'
-        ],
-        notes: [
-          'Guide arrows in the editor show the launch path and scale with your values.',
-          'Balloons pop when the player touches them. Place a balloon at the tip of a guide arrow to chain jumps: the sideways arrow keeps your height, and the upward arrow gains height.'
-        ]
-      },
-      clips: [
-      { label: 'Simple bounce', file: 'museum-bouncing-simple.mp4' },
-      { label: 'Balloon bounce', type: 'image', file: 'museum-bouncing-balloon.png', alt: "[FILL IN: describe what the image shows, for example 'A balloon in the museum level launching the player in an arc, with the guide arrow showing the direction.']" }
+    { group: 'core', name: 'Bouncing platform', text: 'Launches the player: a trampoline bounce, or a balloon that pops and sends them in an arc.', clips: [
+      { label: 'Simple bounce', file: 'museum-bouncing-simple.mp4',
+        // DRAFT: rewrite me
+        description: 'A trampoline that launches the player in the direction you choose.',
+        details: {
+          steps: [
+            'Drag a mesh into your level and add the Bouncing Platform component.',
+            'Choose Simple Bounce.',
+            'Set the launch direction and strength.'
+          ],
+          notes: [
+            'A guide arrow in the editor shows where the player will go.'
+          ]
+        } },
+      { label: 'Balloon bounce', type: 'image', file: 'museum-bouncing-balloon.png', alt: "[FILL IN: describe what the image shows, for example 'A balloon in the museum level launching the player in an arc, with the guide arrow showing the direction.']",
+        // DRAFT: rewrite me
+        description: 'A balloon that pops on touch and sends the player in an arc.',
+        details: {
+          steps: [
+            'Add the Bouncing Platform component to a mesh.',
+            'Choose Balloon Bounce.',
+            'Set the direction, distance and height.'
+          ],
+          notes: [
+            'Place a balloon at the tip of a guide arrow to chain jumps. The sideways arrow keeps your height, and the upward arrow gains height.'
+          ]
+        } }
     ] },
     { group: 'core', name: 'Spline moving platform', wide: true, text: 'Moves a platform along a path you draw, and can pause or rotate it at points along the way.',
       details: {
@@ -1207,19 +1224,23 @@
 
     // ---------- Drawer content ----------
     function fill(i) {
+      currentClip = 0;
       setText(i);
       reserveHeight();
       buildTabs(clipsOf(i), titleOf(i));
       selectClip(0, false);
       placeTabs();
     }
-    // Left column: group label, the element's name and its description
-    function setText(i) {
-      var el = ELEMENTS[i];
+    // A clip's own description and details (when it has them) replace the element's while that clip is selected
+    function clipText(i, c) { var clip = !shared(i) && ELEMENTS[i].clips ? ELEMENTS[i].clips[c || 0] : null; return clip && (clip.description || clip.details) ? clip : null; }
+    function hasClipText(i) { return !shared(i) && (ELEMENTS[i].clips || []).some(function (clip, c) { return clipText(i, c); }); }
+    // Left column: group label, the element's name and its description (the clip's text, if it has its own)
+    function setText(i, c) {
+      var el = ELEMENTS[i], own = clipText(i, c === undefined ? (i === current ? currentClip : 0) : c);
       head.querySelector('.drawer-group').textContent = GROUPS[el.group].name;
       head.querySelector('.drawer-title').textContent = el.name;
-      head.querySelector('.drawer-desc').textContent = el.text;
-      var box = head.querySelector('.drawer-details'), d = el.details;
+      head.querySelector('.drawer-desc').textContent = own && own.description || el.text;
+      var box = head.querySelector('.drawer-details'), d = own && own.details || el.details;
       box.textContent = '';
       box.hidden = !(d && ((d.steps && d.steps.length) || (d.options && d.options.length) || (d.notes && d.notes.length)));
       if (box.hidden) return;
@@ -1234,21 +1255,25 @@
       });
       cols.forEach(function (col) { if (col.firstChild) box.appendChild(col); });
     }
-    // In a shared group the text can swap while the drawer is open: keep room for the tallest of them so nothing jumps
+    // The text can swap while the drawer is open (a shared group, or clips with their own text):
+    // keep room for the tallest of them so the video and the clip buttons do not jump
     function reserveHeight() {
       head.style.minHeight = '';
-      if (current < 0 || !shared(current)) return;
+      if (current < 0) return;
+      var variants = [];
+      if (shared(current)) ELEMENTS.forEach(function (el, j) { if (el.group === ELEMENTS[current].group) variants.push([j, 0]); });
+      else if (hasClipText(current)) ELEMENTS[current].clips.forEach(function (clip, c) { variants.push([current, c]); });
+      if (variants.length < 2) return;
       var tallest = 0;
-      ELEMENTS.forEach(function (el, j) {
-        if (el.group !== ELEMENTS[current].group) return;
-        setText(j);
+      variants.forEach(function (v) {
+        setText(v[0], v[1]);
         tallest = Math.max(tallest, head.offsetHeight);
       });
       setText(current);
       head.style.minHeight = tallest + 'px';
     }
     window.addEventListener('resize', function () { if (state !== 'closed') reserveHeight(); });
-    // Same shared group: crossfade the text (about 150ms), or swap instantly with reduced motion
+    // Same shared group or another clip with its own text: crossfade the text (about 150ms), or swap instantly with reduced motion
     var swapTimer = null;
     function swapText(i) {
       clearTimeout(swapTimer);
@@ -1294,7 +1319,9 @@
     // ---------- The one shared <video> ----------
     function selectClip(c, playNow) {
       var clips = clipsOf(current), clip = clips[c];
+      var textChanges = c !== currentClip && state !== 'closed' && hasClipText(current);
       currentClip = c;
+      if (textChanges) swapText(current);               // the text follows the clip, in place
       tabs.forEach(function (t, j) { t.setAttribute('aria-selected', String(j === c)); t.tabIndex = j === c ? 0 : -1; });
       if (tabs[c]) media.setAttribute('aria-labelledby', tabs[c].id);
       var name = titleOf(current) + (clips.length > 1 ? ': ' + clipLabel(clip, c) : '');
