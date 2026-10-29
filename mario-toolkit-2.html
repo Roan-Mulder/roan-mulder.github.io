@@ -164,6 +164,10 @@
     .drawer-ph { position: absolute; inset: 0; display: none; place-content: center; gap: .3rem; padding: 1rem; text-align: center; color: #26313a; }
     .drawer-media.is-missing .drawer-ph { display: grid; }
     .drawer-media.is-missing .drawer-video { display: none; }
+    /* Still-image clips use the same box: the video is hidden and the image shows instead */
+    .drawer-image { display: none; width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+    .drawer-media.is-image .drawer-video { display: none; }
+    .drawer-media.is-image.is-ready .drawer-image { display: block; }
     /* Under the video: the enlarge hint (attached to the video), then the clip buttons */
     .drawer-clipbox { position: relative; }
     .drawer-hint { --hint-line: calc(.82rem * 1.3); margin: 7px 0 0; font-size: .82rem; line-height: 1.3; color: #3b5a4a; text-align: right; }
@@ -184,7 +188,7 @@
     .lightbox::backdrop { background: rgba(0, 0, 0, .85); }
     .lightbox-stage { display: flex; align-items: center; justify-content: center; width: 100%; }
     /* The script sets the width from the video's own shape: at most 90vw by 88vh (full width on phones) */
-    .lightbox-stage video { display: block; width: 90vw; height: auto; max-width: 90vw; max-height: 88vh; object-fit: contain; background: transparent; opacity: 1; cursor: auto; }
+    .lightbox-stage video, .lightbox-stage .drawer-image { display: block; width: 90vw; height: auto; max-width: 90vw; max-height: 88vh; object-fit: contain; background: transparent; opacity: 1; cursor: auto; }
     .lightbox-close {
       position: fixed; z-index: 2; top: max(1rem, env(safe-area-inset-top)); right: max(1rem, env(safe-area-inset-right));
       display: grid; place-items: center; width: 56px; height: 56px; padding: 0; border: 0; border-radius: 50%;
@@ -222,6 +226,8 @@
     .lightbox-ph { display: none; width: min(90vw, calc(78vh * 16 / 9)); aspect-ratio: 16 / 9; place-content: center; gap: .3rem; padding: 1rem; text-align: center; border-radius: .8rem; background: #d3dadd; color: #26313a; }
     .lightbox.is-missing .lightbox-ph { display: grid; }
     .lightbox.is-missing .lightbox-stage video { display: none; }
+    .lightbox-stage .drawer-image, .lightbox.is-image .lightbox-stage video, .lightbox.is-missing .lightbox-stage .drawer-image { display: none; }
+    .lightbox.is-image:not(.is-missing) .lightbox-stage .drawer-image { display: block; }
     .lightbox-stage.is-scroll { justify-content: flex-start; overflow-x: auto; overscroll-behavior-x: contain; }
 
     @media (max-width: 640px) {
@@ -237,7 +243,7 @@
       .clip-tabs { flex-direction: column; align-items: center; }
       .clip-tab { width: 100%; max-width: 320px; }
       .drawer-title { font-size: 1.3rem; }
-      .lightbox-stage video { max-width: 100vw; max-height: 80vh; }
+      .lightbox-stage video, .lightbox-stage .drawer-image { max-width: 100vw; max-height: 80vh; }
       .lightbox-close { width: 48px; height: 48px; }
       /* Wide clip on a phone: a sideways-scrolling strip, at least 220px tall so the text stays readable */
       .drawer.is-wide .drawer-strip { overflow-x: auto; overscroll-behavior-x: contain; }
@@ -248,6 +254,7 @@
     }
     @media (max-width: 640px) and (orientation: portrait) {
       .lightbox-hint { display: block; }
+      .lightbox.no-rotate .lightbox-hint { display: none; }   /* images that are not wider than they are tall */
     }
     @media (prefers-reduced-motion: reduce) {
       .drawer, .drawer.is-open, .drawer-body, .drawer-head, .el-btn, .el-chev, .drawer-video { transition: none !important; }
@@ -543,6 +550,7 @@
                   <div class="drawer-strip">
                     <div class="drawer-media" id="drawer-media">
                       <video class="drawer-video" muted loop playsinline preload="none"></video>
+                      <img class="drawer-image" alt="">
                       <div class="drawer-ph"><strong class="drawer-ph-name"></strong><span>Showcase video coming soon</span></div>
                     </div>
                   </div>
@@ -845,10 +853,13 @@
      group: "core" (Core Behaviors) or "logic" (Level Logic Actors). Group settings are in GROUPS below.
      details (optional): { steps: [...], options: [...] } shown under the description as
             "How to use it" (a numbered list) and "What you can change" (a bulleted list).
-     clips: one or more videos. With two or more, tabs appear under the video.
+     clips: one or more videos or still images. With two or more, tabs appear under the video.
             (Not used in a shared group: those elements use the group's clips instead.)
+       type       (optional) "video" (the default) or "image" for a still image.
        label      the clip button text (needed when an element has two or more clips).
        file       the video inside MEDIA_FOLDER. Its first frame is used as the preview (no separate image files).
+                  For an image: a .png or .jpg (if the .png is missing, the .jpg with the same name is tried).
+       alt        (optional, images) the image description for screen readers. Without it, the label is used.
        mobileFile (optional) a smaller copy of the same video, used on phones (640px wide and narrower).
        start, end (optional) seconds. When both are set, only that part of the video loops.
      If you change a name or description, also update the no-JavaScript lists in Part 1.
@@ -876,7 +887,7 @@
     ] },
     { group: 'core', name: 'Bouncing platform', text: 'A trampoline bounce, or a balloon that launches the player in an arc.', clips: [
       { label: 'Simple bounce', file: 'museum-bouncing-simple.mp4' },
-      { label: 'Balloon bounce', file: 'museum-bouncing-balloon.mp4' }
+      { label: 'Balloon bounce', type: 'image', file: 'museum-bouncing-balloon.png', alt: "[FILL IN: describe what the image shows, for example 'A balloon in the museum level launching the player in an arc, with the guide arrow showing the direction.']" }
     ] },
     { group: 'core', name: 'Spline moving platform', text: 'Follows a drawn path and can pause or rotate at points along it.', clips: [
       { file: 'museum-spline-platform.mp4' }
@@ -904,6 +915,7 @@
     var strip = drawer.querySelector('.drawer-strip');
     var media = drawer.querySelector('.drawer-media');
     var video = drawer.querySelector('.drawer-video');
+    var image = drawer.querySelector('.drawer-image');
     var placeholder = drawer.querySelector('.drawer-ph');
     var drawerHint = clipbox.querySelector('.wide-hint');
     var tablist = drawer.querySelector('.clip-tabs');
@@ -932,6 +944,8 @@
     var triedFull = true;             // false while a phone is trying the smaller mobile copy
     var segStart = null, segEnd = null;
     var ratio = 16 / 9;
+    var showingImage = false;         // the current clip is a still image
+    var triedOther = false;           // the image already tried the other extension (.png or .jpg)
 
     function onChange(mq, fn) { if (mq.addEventListener) mq.addEventListener('change', fn); else mq.addListener(fn); }
     function make(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
@@ -1146,18 +1160,26 @@
       var name = titleOf(current) + (clips.length > 1 ? ': ' + clipLabel(clip, c) : '');
       placeholder.querySelector('.drawer-ph-name').textContent = name;
       lightboxPh.querySelector('.lightbox-ph-name').textContent = name;
-      lightbox.setAttribute('aria-label', 'Enlarged video: ' + name);
+      var isImage = clip.type === 'image', kind = isImage ? 'image' : 'video';
+      lightbox.setAttribute('aria-label', 'Enlarged ' + kind + ': ' + name);
+      closeLightbox.setAttribute('aria-label', 'Close enlarged ' + kind);
+      expand.setAttribute('aria-label', 'Enlarge ' + kind);
+      placeholder.querySelector('span').textContent = lightboxPh.querySelector('span').textContent = 'Showcase ' + kind + ' coming soon';
+      showingImage = isImage;
+      media.classList.toggle('is-image', isImage);
+      lightbox.classList.toggle('is-image', isImage);
+      setHint();
       var both = isNum(clip.start) && isNum(clip.end) && clip.end > clip.start;
       segStart = both ? clip.start : null;
       segEnd = both ? clip.end : null;
       playNow = playNow && (state === 'open' || state === 'opening' || inLightbox());
 
-      if (clip.file === loadedFile) {                   // same file: no reload, just jump to the new start
+      if (!isImage && clip.file === loadedFile) {                   // same file: no reload, just jump to the new start
         if (video.readyState >= 1) video.currentTime = segStart !== null ? segStart : 0;
         if (playNow && !reduce.matches) play();
         return;
       }
-      loadedFile = clip.file;
+      loadedFile = isImage ? null : clip.file;
       media.classList.remove('is-ready', 'is-missing');
       lightbox.classList.remove('is-missing');
       loaded();
@@ -1166,6 +1188,16 @@
       setShape(known ? known.w / known.h : 4 / 3);
       if (!inLightbox()) setEnlargeable(false);
       video.pause();
+      if (isImage) {                                    // still image: empty the video, show the <img> instead
+        needsLoad = false;
+        if (video.getAttribute('src')) { video.removeAttribute('src'); video.load(); }
+        image.alt = clip.alt || clipLabel(clip, c);
+        triedOther = false;
+        image.src = MEDIA_FOLDER + clip.file;
+        if (!image.complete) armSlow();
+        return;
+      }
+      image.removeAttribute('src');
       video.preload = openedOnce ? 'metadata' : 'none';
       triedFull = !(phone.matches && clip.mobileFile);
       video.src = srcFor(triedFull ? clip.file : clip.mobileFile);
@@ -1176,6 +1208,7 @@
       video.controls = reduce.matches || inLightbox();   // reduced motion: first frame and native controls, no autoplay
       video.autoplay = !reduce.matches;
       openedOnce = true;
+      if (showingImage) return;
       if (needsLoad) {
         needsLoad = false;
         video.preload = reduce.matches ? 'metadata' : 'auto';
@@ -1212,6 +1245,30 @@
       setEnlargeable(false);
     });
 
+    // ---------- Still images ----------
+    image.addEventListener('load', function () {
+      if (!showingImage || !image.getAttribute('src')) return;
+      var file = clipsOf(current)[currentClip].file;
+      shapes[file] = { w: image.naturalWidth, h: image.naturalHeight };
+      media.style.aspectRatio = image.naturalWidth + ' / ' + image.naturalHeight;
+      setShape(image.naturalWidth / image.naturalHeight);
+      loaded();
+      media.classList.add('is-ready');
+      setEnlargeable(!!lightbox.showModal);
+      if (inLightbox()) sizeLightboxVideo();
+    });
+    image.addEventListener('error', function () {
+      if (!showingImage || !image.getAttribute('src')) return;
+      var file = clipsOf(current)[currentClip].file;
+      var other = /\.png$/i.test(file) ? file.replace(/\.png$/i, '.jpg') : file.replace(/\.jpe?g$/i, '.png');
+      if (!triedOther && other !== file) { triedOther = true; image.src = MEDIA_FOLDER + other; return; }   // .png missing: try the .jpg
+      loaded();
+      media.classList.add('is-missing');
+      lightbox.classList.add('is-missing');
+      setEnlargeable(false);
+    });
+    image.addEventListener('click', function () { if (image.parentNode === media) openLightbox(); });
+
     // ---------- Wide clips ----------
     function setShape(r) {
       ratio = r;
@@ -1219,6 +1276,7 @@
       media.style.setProperty('--ratio', r);
       drawer.classList.toggle('is-wide', wide);
       lightbox.classList.toggle('is-wide', wide);
+      lightbox.classList.toggle('no-rotate', showingImage && r <= 1);   // "Rotate your phone" only for wide images
       updateScrollers();
     }
     function makeScroller(el, on, hint) {
@@ -1235,7 +1293,8 @@
 
     // The hint is plain text (not focusable); keyboard users use the expand icon on the video
     function setHint() {
-      hint.textContent = reduce.matches ? 'Use the expand icon to enlarge' : (noHover.matches ? 'Tap video to enlarge' : 'Click video to enlarge');
+      var kind = showingImage ? 'image' : 'video';       // images can always be clicked, also with reduced motion
+      hint.textContent = reduce.matches && !showingImage ? 'Use the expand icon to enlarge' : (noHover.matches ? 'Tap ' : 'Click ') + kind + ' to enlarge';
       if (typeof placeTabs === 'function') placeTabs();
     }
     setHint();
@@ -1252,7 +1311,7 @@
       if (text.width && right + 12 <= text.left) clipbox.classList.add('tabs-up');
     }
     window.addEventListener('resize', placeTabs);
-    function setEnlargeable(on) {           // only offer enlarging when there is a video to enlarge
+    function setEnlargeable(on) {           // only offer enlarging when there is a video or image to enlarge
       expand.hidden = !on;
       hint.classList.toggle('is-off', !on);
     }
@@ -1263,41 +1322,43 @@
       var hasTabs = !tablist.hidden;
       var scroll = ratio > WIDE_RATIO && phone.matches;
       stage.classList.toggle('is-scroll', scroll);
-      video.style.maxWidth = 'none';
-      video.style.maxHeight = 'none';
-      if (scroll) video.style.width = 'calc(' + (hasTabs ? 62 : 70) + 'vh * ' + ratio + ')';           // fills the height, scrolls sideways
-      else if (phone.matches) video.style.width = 'min(100vw, calc(' + (hasTabs ? 72 : 80) + 'vh * ' + ratio + '))';
-      else video.style.width = 'min(90vw, calc(' + (hasTabs ? 78 : 88) + 'vh * ' + ratio + '))';
+      var width;
+      if (scroll) width = 'calc(' + (hasTabs ? 62 : 70) + 'vh * ' + ratio + ')';           // fills the height, scrolls sideways
+      else if (phone.matches) width = 'min(100vw, calc(' + (hasTabs ? 72 : 80) + 'vh * ' + ratio + '))';
+      else width = 'min(90vw, calc(' + (hasTabs ? 78 : 88) + 'vh * ' + ratio + '))';
+      [video, image].forEach(function (el) { el.style.maxWidth = el.style.maxHeight = 'none'; el.style.width = width; });
       updateScrollers();
     }
     function openLightbox() {
       if (!media.classList.contains('is-ready') || !lightbox.showModal || lightbox.open) return;
       var time = video.currentTime;
       stage.insertBefore(video, lightboxPh);           // one video only: the drawer copy is gone while this is open
+      stage.insertBefore(image, lightboxPh);           // the image comes along, so tabs can switch between both in here
       lightboxHint.insertAdjacentElement('afterend', tablist);
       tabs.forEach(function (t) { t.setAttribute('aria-controls', stage.id); });
-      video.controls = true;
-      if (Math.abs(video.currentTime - time) > .05) video.currentTime = time;
+      video.controls = !showingImage;
+      if (!showingImage && Math.abs(video.currentTime - time) > .05) video.currentTime = time;
       document.documentElement.classList.add('is-locked');
       lightbox.showModal();
       sizeLightboxVideo();
       stage.scrollLeft = 0;
       closeLightbox.focus();
-      if (!reduce.matches) play();
+      if (!showingImage && !reduce.matches) play();
     }
     lightbox.addEventListener('close', function () {
       var time = video.currentTime;
       media.insertBefore(video, placeholder);
+      media.insertBefore(image, placeholder);
       drawerHint.insertAdjacentElement('afterend', tablist);
       tabs.forEach(function (t) { t.setAttribute('aria-controls', media.id); });
       placeTabs();
       if (Math.abs(video.currentTime - time) > .05) video.currentTime = time;
-      video.style.width = video.style.maxWidth = video.style.maxHeight = '';
+      [video, image].forEach(function (el) { el.style.width = el.style.maxWidth = el.style.maxHeight = ''; });
       stage.classList.remove('is-scroll');
       video.controls = reduce.matches;
       document.documentElement.classList.remove('is-locked');
       updateScrollers();
-      if (state === 'open' && !reduce.matches) play(); else video.pause();
+      if (state === 'open' && !showingImage && !reduce.matches) play(); else video.pause();
       if (expand.hidden) { var t = tabs[currentClip] || buttons[current]; t.focus({ preventScroll: true }); }
       else expand.focus({ preventScroll: true });
     });
