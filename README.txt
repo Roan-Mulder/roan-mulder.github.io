@@ -37,6 +37,6 @@ TO PUBLISH
   index.html must stay in the top level of the repository.
 
 PLACEHOLDERS TO CHANGE BEFORE PUBLISHING
-  - Email address (search for your.email@example.com in every page)
+  - Email address: done, every page uses 240100@buas.nl (to change it, search for that address in every page)
   - Text in square brackets [like this]
   - The CV PDF link on cv.html
